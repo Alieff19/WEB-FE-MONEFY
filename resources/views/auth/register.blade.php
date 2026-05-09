@@ -68,7 +68,10 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                         @enderror
-                                        <i class="bi bi-lock position-absolute text-muted" style="right: 15px; top: 12px; font-size: 1.2rem;"></i>
+                                        <i class="bi bi-eye-slash position-absolute text-muted" id="togglePassword" style="right: 15px; top: 12px; font-size: 1.2rem; cursor: pointer;" title="Show/Hide Password"></i>
+                                    </div>
+                                    <div class="password-requirements mt-2 small d-none" id="passwordRequirements">
+                                        <i class="bi bi-x-circle me-1" id="passwordIcon"></i> <span id="passwordFeedback"></span>
                                     </div>
                                 </div>
 
@@ -76,7 +79,7 @@
                                     <label for="password_confirmation" class="form-label mb-0">Confirm Password</label>
                                     <div class="position-relative mt-2">
                                         <input type="password" class="form-control form-control-custom" id="password_confirmation" name="password_confirmation" placeholder="••••••••" required>
-                                        <i class="bi bi-shield-lock position-absolute text-muted" style="right: 15px; top: 12px; font-size: 1.2rem;"></i>
+                                        <i class="bi bi-eye-slash position-absolute text-muted" id="togglePasswordConfirm" style="right: 15px; top: 12px; font-size: 1.2rem; cursor: pointer;" title="Show/Hide Password"></i>
                                     </div>
                                 </div>
 
@@ -100,4 +103,88 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        const reqContainer = document.getElementById('passwordRequirements');
+        const feedbackText = document.getElementById('passwordFeedback');
+        const feedbackIcon = document.getElementById('passwordIcon');
+        const passwordConfirmInput = document.getElementById('password_confirmation');
+
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            
+            // Cek kriteria
+            const isLengthValid = val.length >= 8;
+            const isUpperValid = /[A-Z]/.test(val);
+            const isLowerValid = /[a-z]/.test(val);
+            const isNumberValid = /[0-9]/.test(val);
+            const isSpecialValid = /[^A-Za-z0-9]/.test(val);
+
+            let missing = [];
+            if (!isLengthValid) missing.push("8 karakter");
+            if (!isUpperValid) missing.push("huruf besar");
+            if (!isLowerValid) missing.push("huruf kecil");
+            if (!isNumberValid) missing.push("angka");
+            if (!isSpecialValid) missing.push("karakter unik");
+
+            // Update UI feedback
+            if (val.length === 0) {
+                reqContainer.classList.add('d-none');
+            } else {
+                reqContainer.classList.remove('d-none');
+                if (missing.length > 0) {
+                    reqContainer.classList.remove('text-success');
+                    reqContainer.classList.add('text-danger');
+                    feedbackIcon.className = 'bi bi-x-circle me-1';
+                    feedbackText.textContent = 'Kurang: ' + missing.join(', ');
+                    passwordInput.setCustomValidity('Password kurang: ' + missing.join(', '));
+                } else {
+                    reqContainer.classList.remove('text-danger');
+                    reqContainer.classList.add('text-success');
+                    feedbackIcon.className = 'bi bi-check-circle-fill me-1';
+                    feedbackText.textContent = 'Password sudah memenuhi kriteria.';
+                    passwordInput.setCustomValidity('');
+                }
+            }
+
+            // Validasi ulang konfirmasi password
+            if (passwordConfirmInput.value) {
+                if (passwordConfirmInput.value !== val) {
+                    passwordConfirmInput.setCustomValidity('Konfirmasi password tidak cocok.');
+                } else {
+                    passwordConfirmInput.setCustomValidity('');
+                }
+            }
+        });
+
+        // Validasi konfirmasi password
+        passwordConfirmInput.addEventListener('input', function() {
+            if (this.value !== passwordInput.value) {
+                this.setCustomValidity('Konfirmasi password tidak cocok.');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // Toggle Password Visibility
+        const togglePassword = document.getElementById('togglePassword');
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+
+        // Toggle Password Confirmation Visibility
+        const togglePasswordConfirm = document.getElementById('togglePasswordConfirm');
+        togglePasswordConfirm.addEventListener('click', function () {
+            const type = passwordConfirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordConfirmInput.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    });
+</script>
 @endsection

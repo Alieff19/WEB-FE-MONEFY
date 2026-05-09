@@ -59,7 +59,7 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                         @enderror
-                                        <i class="bi bi-lock position-absolute text-muted" style="right: 15px; top: 12px; font-size: 1.2rem;"></i>
+                                        <i class="bi bi-eye-slash position-absolute text-muted" id="togglePassword" style="right: 15px; top: 12px; font-size: 1.2rem; cursor: pointer;" title="Show/Hide Password"></i>
                                     </div>
                                 </div>
 
@@ -83,4 +83,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        
+        // Toggle Password Visibility
+        const togglePassword = document.getElementById('togglePassword');
+        togglePassword.addEventListener('click', function () {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the icon
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    });
+</script>
 @endsection
