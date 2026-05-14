@@ -33,4 +33,13 @@ class ApiHelper
         
         return $request->$method($url, $data);
     }
+
+    /**
+     * Format date string to human readable format (Indonesian)
+     */
+    public static function formatDate($dateString)
+    {
+        if (!$dateString) return '-';
+        return \Carbon\Carbon::parse($dateString)->translatedFormat('d M Y');
+    }
 }

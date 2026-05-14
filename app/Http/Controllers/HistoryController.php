@@ -15,8 +15,12 @@ class HistoryController extends Controller
         $response = ApiHelper::call('get', 'transactions', ['period' => $period]);
         $histories = $response->successful() ? $response->json() : [];
 
+        $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
+        $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
+
         return view('history', [
             'histories' => $histories,
+            'user' => $user,
         ]);
     }
 }

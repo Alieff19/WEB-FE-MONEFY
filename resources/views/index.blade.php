@@ -58,15 +58,15 @@
                         </a>
                     </div>
                     <div>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#addWalletModal" class="text-decoration-none">
+                        <a href="{{ route('wallet.index') }}" class="text-decoration-none">
                             <div class="quick-access-icon mx-auto"><i class="bi bi-wallet2"></i></div>
-                            <span class="small fw-semibold text-primary">Add wallet</span>
+                            <span class="small fw-semibold text-primary">Wallet</span>
                         </a>
                     </div>
                     <div>
-                        <a href="{{ route('saving') }}" class="text-decoration-none">
-                            <div class="quick-access-icon mx-auto"><i class="bi bi-piggy-bank"></i></div>
-                            <span class="small fw-semibold text-primary">Saving</span>
+                        <a href="{{ route('wishlist') }}" class="text-decoration-none">
+                            <div class="quick-access-icon mx-auto"><i class="bi bi-magic"></i></div>
+                            <span class="small fw-semibold text-primary">Wishlist</span>
                         </a>
                     </div>
                 </div>
@@ -85,20 +85,40 @@
 
                 <!-- Transactions List -->
                 <div class="transaction-list">
-                    @forelse($recentTransactions ?? [] as $transaction)
+                    @php
+                        // Normalize the API response to ensure it's a list of transactions
+                        $txList = $recentTransactions['data'] ?? $recentTransactions ?? [];
+                        
+                        if (is_array($txList) && !isset($txList[0]) && count($txList) > 0) {
+                            // If it's a paginator object containing a nested 'data' array
+                            if (isset($txList['data'])) {
+                                $txList = $txList['data'];
+                            } 
+                            // If it's a single transaction object instead of a list
+                            elseif (isset($txList['type']) || isset($txList['amount'])) {
+                                $txList = [$txList];
+                            }
+                        }
+                        
+                        // Fallback if somehow still not an iterable list
+                        if (!is_array($txList) && !is_object($txList)) {
+                            $txList = [];
+                        }
+                    @endphp
+                    @forelse($txList as $transaction)
                     <div class="transaction-item">
-                        <div class="icon-circle {{ $transaction['type'] === 'income' ? 'income' : 'expense' }}">
-                            <i class="bi bi-arrow-{{ $transaction['type'] === 'income' ? 'down' : 'up' }}"></i>
+                        <div class="icon-circle {{ $transaction['type'] === 'income' ? 'income' : ($transaction['type'] === 'transfer' ? 'transfer' : 'expense') }}">
+                            <i class="bi bi-arrow-{{ $transaction['type'] === 'income' ? 'down' : ($transaction['type'] === 'transfer' ? 'left-right' : 'up') }}"></i>
                         </div>
                         <div class="me-auto">
                             <h6 class="mb-0 fw-bold">{{ $transaction['category'] }}</h6>
                             <small class="text-muted">{{{ \Carbon\Carbon::parse($transaction['transaction_date'])->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('j F Y') }}}</small>
                         </div>
                         <div class="text-end">
-                            <div class="trans-amount {{ $transaction['type'] === 'income' ? 'income' : 'expense' }}">
-                                {{ $transaction['type'] === 'income' ? '+' : '-' }}Rp {{ number_format((float)($transaction['amount'] ?? 0), 0, ',', '.') }}
+                            <div class="trans-amount {{ $transaction['type'] === 'income' ? 'income' : ($transaction['type'] === 'transfer' ? 'transfer' : 'expense') }}">
+                                {{ $transaction['type'] === 'income' ? '+' : ($transaction['type'] === 'transfer' ? '↔' : '-') }}Rp {{ number_format((float)($transaction['amount'] ?? 0), 0, ',', '.') }}
                             </div>
-                            <small class="text-muted" style="font-size: 0.75rem;">{{ $transaction['wallet_name'] }}</small>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ $transaction['wallet']['name_wallet'] ?? 'No Wallet' }}</small>
                         </div>
                     </div>
                     @empty
@@ -115,3 +135,47 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterLinks = document.querySelectorAll('.filter-pills .nav-link');
+    const dashboardStats = document.querySelector('.balance-card');
+    const transactionList = document.querySelector('.transaction-list');
+
+    filterLinks.forEach(link => {
+        link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+
+            // Update UI Active State
+            filterLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Swap Content
+                const newStats = doc.querySelector('.balance-card');
+                const newTransactions = doc.querySelector('.transaction-list');
+
+                if (newStats && dashboardStats) dashboardStats.innerHTML = newStats.innerHTML;
+                if (newTransactions && transactionList) transactionList.innerHTML = newTransactions.innerHTML;
+
+                // Update Browser URL
+                window.history.pushState({}, '', url);
+            } catch (error) {
+                console.error('AJAX Error:', error);
+                alert('Failed to load data. Please try again.');
+            }
+        });
+    });
+});
+</script>
+@endpush

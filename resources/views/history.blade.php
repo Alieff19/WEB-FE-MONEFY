@@ -50,9 +50,9 @@
             <div class="col-lg-9">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="fw-bold mb-0" style="color: var(--text-dark);">History Logs</h4>
-                    <div>
-                        <button type="button" class="btn btn-outline-secondary me-2" onclick="alert('Filter feature will be handled by Backend.')"><i class="bi bi-filter"></i> Filter</button>
-                        <button type="button" class="btn btn-outline-primary" onclick="alert('Export to PDF/Excel will be ready soon!')"><i class="bi bi-download"></i> Export</button>
+                    <div class="position-relative" style="width: 250px;">
+                        <input type="text" id="searchInput" class="form-control rounded-pill pe-5" placeholder="Search history...">
+                        <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
                     </div>
                 </div>
 
@@ -69,17 +69,39 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($histories ?? [] as $transaction)
+                                @php
+                                    // Normalize the API response to ensure it's a list of transactions
+                                    $txList = $histories['data'] ?? $histories ?? [];
+                                    
+                                    if (is_array($txList) && !isset($txList[0]) && count($txList) > 0) {
+                                        // If it's a paginator object containing a nested 'data' array
+                                        if (isset($txList['data'])) {
+                                            $txList = $txList['data'];
+                                        } 
+                                        // If it's a single transaction object instead of a list
+                                        elseif (isset($txList['type']) || isset($txList['amount'])) {
+                                            $txList = [$txList];
+                                        }
+                                    }
+                                    
+                                    // Fallback if somehow still not an iterable list
+                                    if (!is_array($txList) && !is_object($txList)) {
+                                        $txList = [];
+                                    }
+                                @endphp
+                                @forelse($txList as $transaction)
                                 <tr>
                                     <td class="py-3 border-bottom">
-                                        <div class="icon-circle text-white d-inline-flex" style="background-color: var(--{{ $transaction['type'] === 'income' ? 'income-green' : 'expense-red' }}); width: 40px; height: 40px;">
-                                            <i class="bi bi-arrow-{{ $transaction['type'] === 'income' ? 'down' : 'up' }} fw-bold"></i>
-                                        </div>
+                                        <div class="icon-circle text-white d-inline-flex"
+                                         style="background-color: var(--{{ $transaction['type'] === 'income' ? 'income-green' : ($transaction['type'] === 'transfer' ? 'primary-purple' : 'expense-red') }}); width: 40px; height: 40px;">
+                                        <i class="bi bi-arrow-{{ $transaction['type'] === 'income' ? 'down' : ($transaction['type'] === 'transfer' ? 'left-right' : 'up') }} fw-bold"></i>
+                                    </div>
                                     </td>
                                     <td class="py-3 border-bottom fw-bold text-secondary">{{ $transaction['title'] }}</td>
                                     <td class="py-3 border-bottom text-muted">{{{ \Carbon\Carbon::parse($transaction['transaction_date'])->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('j F Y') }}}</td>
-                                    <td class="py-3 border-bottom text-end fw-bold" style="color: var(--{{ $transaction['type'] === 'income' ? 'income-green' : 'expense-red' }});">
-                                        {{ $transaction['type'] === 'income' ? '+' : '-' }}Rp {{ number_format((float)($transaction['amount'] ?? 0), 0, ',', '.') }}
+                                    <td class="py-3 border-bottom text-end fw-bold"
+                                        style="color: var(--{{ $transaction['type'] === 'income' ? 'income-green' : ($transaction['type'] === 'transfer' ? 'primary-purple' : 'expense-red') }});">
+                                        {{ $transaction['type'] === 'income' ? '+' : ($transaction['type'] === 'transfer' ? '↔' : '-') }}Rp {{ number_format((float)($transaction['amount'] ?? 0), 0, ',', '.') }}
                                     </td>
                                 </tr>
                                 @empty
@@ -96,3 +118,73 @@
     </div>
 @endsection
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterLinks = document.querySelectorAll('.filter-sidebar-btn');
+    const tableContainer = document.querySelector('.table-responsive');
+
+    filterLinks.forEach(link => {
+        link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+
+            // Update UI Active State
+            filterLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Swap Content
+                const newTable = doc.querySelector('.table-responsive');
+
+                if (newTable && tableContainer) {
+                    tableContainer.innerHTML = newTable.innerHTML;
+                }
+
+                // Update Browser URL
+                window.history.pushState({}, '', url);
+
+                // Re-apply search filter if active
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && searchInput.value) {
+                    searchInput.dispatchEvent(new Event('keyup'));
+                }
+            } catch (error) {
+                console.error('AJAX Error:', error);
+                alert('Failed to load data. Please try again.');
+            }
+        });
+    });
+});
+
+// Search logic
+document.addEventListener('keyup', function(e) {
+    if (e.target && e.target.id === 'searchInput') {
+        const filter = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            if (row.cells.length === 1) return; // Skip empty message
+            
+            const description = row.cells[1]?.textContent.toLowerCase() || '';
+            const amount = row.cells[3]?.textContent.toLowerCase() || '';
+            const date = row.cells[2]?.textContent.toLowerCase() || '';
+            
+            if (description.includes(filter) || amount.includes(filter) || date.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+@endpush

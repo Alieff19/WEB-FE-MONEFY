@@ -85,8 +85,8 @@
                                 <i class="bi bi-currency-dollar"></i>
                             </div>
                             <h4 class="fw-bold" style="color: var(--primary-purple);">{{ $saving->name }}</h4>
-                            <div class="fw-bold text-dark mt-2">{{ $saving->current_amount }}</div>
-                            <small class="text-muted" style="font-size: 0.70rem;">of {{ $saving->target_amount }} saving</small>
+                            <div class="fw-bold text-dark mt-2">Rp {{ number_format((float)($saving->current_amount ?? 0), 0, ',', '.') }}</div>
+                            <small class="text-muted" style="font-size: 0.70rem;">of Rp {{ number_format((float)($saving->target_amount ?? 0), 0, ',', '.') }} saving</small>
                         </div>
                     </div>
                     @empty

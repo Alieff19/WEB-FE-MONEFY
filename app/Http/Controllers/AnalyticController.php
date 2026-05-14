@@ -15,15 +15,23 @@ class AnalyticController extends Controller
         $summaryResponse = ApiHelper::call('get', 'analytics/summary', ['trend' => $trend]);
         $summary = $summaryResponse->successful() ? $summaryResponse->json() : [];
 
-        // Ambil data top pengeluaran per kategori dari backend
+        // Ambil data top pengeluaran dan pemasukan per kategori dari backend
         $expensesResponse = ApiHelper::call('get', 'analytics/top-expenses', ['trend' => $trend]);
-        $topExpenses = $expensesResponse->successful() ? $expensesResponse->json() : [];
+        $categoriesData = $expensesResponse->successful() ? $expensesResponse->json() : ['expenses' => [], 'incomes' => []];
+
+        $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
+        $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
 
         return view('analytic', [
             'totalIncome'  => $summary['total_income']  ?? 'Rp. 0',
             'totalExpense' => $summary['total_expense'] ?? 'Rp. 0',
             'totalBalance' => $summary['total_balance'] ?? 'Rp. 0',
-            'topExpenses'  => $topExpenses,
+            'chartLabels'  => $summary['chart_labels'] ?? [],
+            'chartIncome'  => $summary['chart_income'] ?? [],
+            'chartExpense' => $summary['chart_expense'] ?? [],
+            'topExpenses'  => $categoriesData['expenses'] ?? [],
+            'topIncomes'   => $categoriesData['incomes'] ?? [],
+            'user'         => $user,
         ]);
     }
 }

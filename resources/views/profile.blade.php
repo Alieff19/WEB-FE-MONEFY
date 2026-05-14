@@ -10,17 +10,22 @@
             <div class="col-lg-4">
                 <div class="bg-white p-5 rounded-4 text-center" style="box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
                     <!-- Circular Avatar Profile -->
-                    <div class="profile-avatar-container mb-3">
-                        <div class="profile-avatar">
-                            <i class="bi bi-person-fill"></i>
+                    <div class="profile-avatar-container mb-3 position-relative d-inline-block">
+                        <div class="profile-avatar overflow-hidden" style="width: 120px; height: 120px; border-radius: 50%; background-color: var(--primary-purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto;">
+                            @if(!empty($user['avatar']))
+                                <img src="{{ $user['avatar'] }}" alt="Avatar" id="userAvatarImg" style="width: 100%; height: 100%; object-fit: cover;">
+                            @else
+                                <i class="bi bi-person-fill" id="userAvatarIcon"></i>
+                                <img src="" alt="Avatar" id="userAvatarImg" class="d-none" style="width: 100%; height: 100%; object-fit: cover;">
+                            @endif
                         </div>
-                        <label for="profileUpload" class="edit-badge" style="cursor: pointer;" title="Change Profile Picture">
-                            <i class="bi bi-pencil-fill"></i>
+                        <label for="profileUpload" class="edit-badge position-absolute" style="cursor: pointer; bottom: 0; right: 0; background: var(--income-green); color: white; border-radius: 50%; padding: 8px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border: 3px solid white;" title="Change Profile Picture">
+                            <i class="bi bi-pencil-fill" style="font-size: 0.9rem;"></i>
                         </label>
                         <input type="file" id="profileUpload" class="d-none" accept="image/*" onchange="uploadProfilePicture(this)">
                     </div>
-                    <h3 class="fw-bold mb-1" style="color: var(--primary-purple);">{{ $user->name ?? 'Guest' }}</h3>
-                    <p class="mb-0" style="color: #A0AEC0;">{{ $user->email ?? 'user@example.com' }}</p>
+                    <h3 class="fw-bold mb-1" style="color: var(--primary-purple);">{{ $user['name'] ?? 'Guest' }}</h3>
+                    <p class="mb-0" style="color: #A0AEC0;">{{ $user['email'] ?? 'user@example.com' }}</p>
                 </div>
             </div>
 
@@ -31,9 +36,9 @@
                 <div class="row">
                     <div class="col-md-12">
                         <!-- Card 1 -->
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#addWalletModal" class="setting-card">
+                        <a href="{{ route('wallet.index') }}" class="setting-card">
                             <div class="setting-card-icon"><i class="bi bi-wallet2"></i></div>
-                            <span>Add your wallet</span>
+                            <span>Manage Your Wallets</span>
                             <i class="bi bi-chevron-right ms-auto text-muted"></i>
                         </a>
                     </div>
@@ -49,7 +54,7 @@
                     
                     <div class="col-md-12 mt-4">
                         <!-- Card 3 -->
-                        <form action="{{ Route::has('logout') ? route('logout') : '#' }}" method="POST" class="api-form m-0 p-0">
+                        <form action="{{ Route::has('logout') ? route('logout') : '#' }}" method="POST" class="m-0 p-0">
                             @csrf
                             <button type="submit" class="setting-card logout-card w-100 text-start border-0 bg-transparent" style="cursor:pointer; display:flex; align-items:center;">
                                 <div class="setting-card-icon"><i class="bi bi-box-arrow-right"></i></div>
@@ -90,17 +95,27 @@
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    // Note: Do NOT set Content-Type manually when sending FormData, the browser sets it with the correct boundary!
                 },
                 body: formData
             });
             
             if (response.ok) {
-                alert('Success! Profile picture sent to API.');
-                // Here backend would return the new image URL, and we would update the avatar UI.
+                const result = await response.json();
+                // Update the avatar UI
+                const imgTag = document.getElementById('userAvatarImg');
+                const iconTag = document.getElementById('userAvatarIcon');
+                
+                imgTag.src = result.avatar_url;
+                imgTag.classList.remove('d-none');
+                
+                if(iconTag) {
+                    iconTag.classList.add('d-none');
+                }
+                
+                alert('Success! Profile picture updated.');
             } else {
                 const err = await response.json().catch(()=>({}));
-                alert('Backend Error: ' + (err.message || 'Failed to upload.'));
+                alert('Error: ' + (err.message || 'Failed to upload.'));
             }
         } catch (e) {
             console.error(e);

@@ -6,8 +6,10 @@ use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\AnalyticController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BillController;
-use App\Http\Controllers\SavingController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
 // ── Auth Routes (tidak perlu login) ──────────────────────────────────────────
@@ -28,19 +30,32 @@ Route::middleware(['checkApi'])->group(function () {
     Route::get('/history',  [HistoryController::class,  'index'])->name('history');
     Route::get('/analytic', [AnalyticController::class, 'index'])->name('analytic');
     Route::get('/profile',  [ProfileController::class,  'index'])->name('profile');
+    Route::post('/profile/upload', [ProfileController::class, 'uploadAvatar'])->name('profile.upload');
     Route::get('/help',     [HelpController::class,     'index'])->name('help');
 
     // Bills
     Route::get('/bills',          [BillController::class, 'index'])->name('bills');
     Route::post('/bills',         [BillController::class, 'store'])->name('bills.store');
     Route::put('/bills/{id}',     [BillController::class, 'update'])->name('bills.update');
+    Route::post('/bills/{id}/pay', [BillController::class, 'pay'])->name('bills.pay');
     Route::delete('/bills/{id}',  [BillController::class, 'destroy'])->name('bills.destroy');
 
-    // Savings
-    Route::get('/saving',          [SavingController::class, 'index'])->name('saving');
-    Route::post('/saving',         [SavingController::class, 'store'])->name('savings.store');
-    Route::put('/saving/{id}',     [SavingController::class, 'update'])->name('savings.update');
-    Route::delete('/saving/{id}',  [SavingController::class, 'destroy'])->name('savings.destroy');
+    // Wishlist
+    Route::get('/wishlist',          [WishlistController::class, 'index'])->name('wishlist');
+    Route::post('/wishlist',         [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::put('/wishlist/{id}',     [WishlistController::class, 'update'])->name('wishlist.update');
+    Route::delete('/wishlist/{id}',  [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+
+    // Transactions & Wallets (AJAX endpoints — dipakai oleh Add Transaction modal)
+    Route::post('/transactions',  [TransactionController::class, 'store'])->name('transaction.store');
+    Route::post('/wallets',       [TransactionController::class, 'storeWallet'])->name('wallet.store');
+    Route::get('/api/wallets',    [TransactionController::class, 'wallets'])->name('wallet.list');
+
+    // Wallet Pages (halaman dedicated seperti mobile)
+    Route::get('/wallet',            [WalletController::class, 'index'])->name('wallet.index');
+    Route::get('/wallet/create',     [WalletController::class, 'create'])->name('wallet.create');
+    Route::post('/wallet',           [WalletController::class, 'store'])->name('wallet.store.page');
+    Route::delete('/wallet/{id}',    [WalletController::class, 'destroy'])->name('wallet.destroy');
 
     // Logout
     Route::post('/logout', [ProfileController::class, 'logout'])->name('logout');

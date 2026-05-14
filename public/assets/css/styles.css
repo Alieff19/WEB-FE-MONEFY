@@ -6,9 +6,10 @@
   --bg-color: #F8F9FA;
   --text-dark: #2D3748;
   --text-muted: #A0AEC0;
-  --success-green: #38bdf8; /* Kept it bright, wait, the design uses a vivid green */
+  --success-green: #38bdf8;
   --income-green: #10B981;
   --expense-red: #EF4444;
+  --transfer-purple: #6A4CFF;
 }
 
 body {
@@ -161,12 +162,20 @@ body {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--expense-red);
 }
+.icon-circle.transfer {
+  background-color: rgba(106, 76, 255, 0.1);
+  color: var(--primary-purple);
+}
 .trans-amount.income {
   color: var(--income-green);
   font-weight: 600;
 }
 .trans-amount.expense {
   color: var(--expense-red);
+  font-weight: 600;
+}
+.trans-amount.transfer {
+  color: var(--primary-purple);
   font-weight: 600;
 }
 
@@ -268,6 +277,12 @@ body {
   color: white !important;
   border-color: var(--income-green);
   box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+.transaction-type.nav-pills #transfer-tab.active {
+  background-color: var(--primary-purple) !important;
+  color: white !important;
+  border-color: var(--primary-purple);
+  box-shadow: 0 4px 10px rgba(106, 76, 255, 0.25);
 }
 
 /* Sidebar Filter Buttons */

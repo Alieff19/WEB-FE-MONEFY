@@ -1,64 +1,42 @@
 document.addEventListener("DOMContentLoaded", function() {
-    
 
-
-    // 2. Hide/Show Balance Toggle
+    // ── Balance Hide/Show Toggle ──────────────────────────────────────────────
     const toggleEye = document.querySelector('.bi-eye-slash-fill, .bi-eye-fill');
     if (toggleEye) {
         toggleEye.addEventListener('click', function() {
             const balanceElement = this.closest('.balance-card').querySelector('h1');
-            
             if (this.classList.contains('bi-eye-slash-fill')) {
-                // Hide balance
                 this.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
                 balanceElement.setAttribute('data-original', balanceElement.innerText);
                 balanceElement.innerText = 'Rp ••••••';
             } else {
-                // Show balance
                 this.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
                 balanceElement.innerText = balanceElement.getAttribute('data-original');
             }
         });
     }
 
-    // 3. Dynamic Category Dropdown (Income vs Expense)
-    const expenseTab = document.getElementById('expense-tab');
-    const incomeTab = document.getElementById('income-tab');
-    const categorySelect = document.getElementById('transactionCategory');
+    // ── Auto-format Money Inputs (titik ribuan gaya Indonesia) ───────────────
+    // Input amount di modal transaction sekarang tipe=number, jadi formatter
+    // hanya diaktifkan untuk input balance (Add Wallet) dan target_amount (Saving).
+    const moneyInputs = document.querySelectorAll(
+        'input[name="balance"], input[name="target_amount"]'
+    );
+    moneyInputs.forEach(input => {
+        input.setAttribute('type', 'text');
+        input.setAttribute('inputmode', 'numeric');
 
-    const expenseCategories = [
-        {value: '1', text: 'Food & Drink'},
-        {value: '2', text: 'Transportation'},
-        {value: '3', text: 'Entertainment'},
-        {value: '4', text: 'Shopping'},
-        {value: '5', text: 'Bills'}
-    ];
-
-    const incomeCategories = [
-        {value: '6', text: 'Salary'},
-        {value: '7', text: 'Side Job'},
-        {value: '8', text: 'Investment'},
-        {value: '9', text: 'Gift'},
-        {value: '10', text: 'Refund'}
-    ];
-
-    function updateCategoryDropdown(categories) {
-        if (!categorySelect) return;
-        categorySelect.innerHTML = '<option selected value="">Select Category</option>';
-        categories.forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat.value;
-            option.textContent = cat.text;
-            categorySelect.appendChild(option);
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/[^0-9]/g, '');
+            if (value) {
+                this.value = parseInt(value, 10)
+                    .toLocaleString('id-ID')
+                    .replace(/,/g, '.');
+            } else {
+                this.value = '';
+            }
         });
-    }
-
-    if (expenseTab && incomeTab) {
-        expenseTab.addEventListener('click', () => updateCategoryDropdown(expenseCategories));
-        incomeTab.addEventListener('click', () => updateCategoryDropdown(incomeCategories));
-        
-        // Initial load
-        updateCategoryDropdown(expenseCategories);
-    }
+    });
 
 });
+
