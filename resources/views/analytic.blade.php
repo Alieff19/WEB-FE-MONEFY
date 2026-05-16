@@ -176,7 +176,13 @@
         <div class="bg-white rounded-xxl p-8 shadow-sm border border-surface-container">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h2 class="text-[20px] font-semibold font-headline-sm text-on-surface">Monthly Overview</h2>
+              @php
+                  $trend = request('trend', 'weekly');
+                  $displayTitle = 'Weekly';
+                  if ($trend === 'monthly') $displayTitle = 'Monthly';
+                  if ($trend === 'yearly') $displayTitle = 'Yearly';
+              @endphp
+              <h2 class="text-[20px] font-semibold font-headline-sm text-on-surface">{{ $displayTitle }} Overview</h2>
               <p class="text-[14px] text-on-surface-variant mt-1">Income and Expense comparison</p>
             </div>
             <div class="flex flex-wrap items-center gap-6">

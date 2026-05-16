@@ -9,7 +9,7 @@ class AnalyticController extends Controller
 {
     public function index(Request $request)
     {
-        $trend = $request->query('trend', '6months');
+        $trend = $request->query('trend', 'weekly');
 
         // Ambil data ringkasan keuangan dari backend
         $summaryResponse = ApiHelper::call('get', 'analytics/summary', ['trend' => $trend]);
@@ -23,9 +23,9 @@ class AnalyticController extends Controller
         $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
 
         return view('analytic', [
-            'totalIncome'  => $summary['total_income']  ?? 'Rp. 0',
-            'totalExpense' => $summary['total_expense'] ?? 'Rp. 0',
-            'totalBalance' => $summary['total_balance'] ?? 'Rp. 0',
+            'totalIncome'  => $summary['total_income']  ?? 0,
+            'totalExpense' => $summary['total_expense'] ?? 0,
+            'totalBalance' => $summary['total_balance'] ?? 0,
             'chartLabels'  => $summary['chart_labels'] ?? [],
             'chartIncome'  => $summary['chart_income'] ?? [],
             'chartExpense' => $summary['chart_expense'] ?? [],

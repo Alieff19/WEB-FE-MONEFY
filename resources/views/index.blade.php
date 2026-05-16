@@ -76,11 +76,11 @@
             <div class="col-lg-7">
                 <!-- Filters -->
                 <ul class="nav nav-pills filter-pills mb-4 d-flex justify-content-between flex-nowrap" style="overflow-x: auto;">
-                    <li class="nav-item"><a class="nav-link {{ request('period') == 'day' || !request('period') ? 'active' : '' }}" href="{{ route('home', ['period' => 'day']) }}">Day</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request('period') == 'week' ? 'active' : '' }}" href="{{ route('home', ['period' => 'week']) }}">Week</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request('period') == 'month' ? 'active' : '' }}" href="{{ route('home', ['period' => 'month']) }}">Month</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request('period') == 'year' ? 'active' : '' }}" href="{{ route('home', ['period' => 'year']) }}">Year</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request('period') == 'all' ? 'active' : '' }}" href="{{ route('home', ['period' => 'all']) }}">All</a></li>
+                    <li class="nav-item"><a class="nav-link no-preloader {{ request('period') == 'day' || !request('period') ? 'active' : '' }}" href="{{ route('home', ['period' => 'day']) }}">Day</a></li>
+                    <li class="nav-item"><a class="nav-link no-preloader {{ request('period') == 'week' ? 'active' : '' }}" href="{{ route('home', ['period' => 'week']) }}">Week</a></li>
+                    <li class="nav-item"><a class="nav-link no-preloader {{ request('period') == 'month' ? 'active' : '' }}" href="{{ route('home', ['period' => 'month']) }}">Month</a></li>
+                    <li class="nav-item"><a class="nav-link no-preloader {{ request('period') == 'year' ? 'active' : '' }}" href="{{ route('home', ['period' => 'year']) }}">Year</a></li>
+                    <li class="nav-item"><a class="nav-link no-preloader {{ request('period') == 'all' ? 'active' : '' }}" href="{{ route('home', ['period' => 'all']) }}">All</a></li>
                 </ul>
 
                 <!-- Transactions List -->
@@ -112,7 +112,7 @@
                         </div>
                         <div class="me-auto">
                             <h6 class="mb-0 fw-bold">{{ $transaction['category'] }}</h6>
-                            <small class="text-muted">{{{ \Carbon\Carbon::parse($transaction['transaction_date'])->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('j F Y') }}}</small>
+                            <small class="text-muted">{{{ \Carbon\Carbon::parse($transaction['transaction_date'])->addHours(7)->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('j F Y, H:i') }}}</small>
                         </div>
                         <div class="text-end">
                             <div class="trans-amount {{ $transaction['type'] === 'income' ? 'income' : ($transaction['type'] === 'transfer' ? 'transfer' : 'expense') }}">
@@ -152,6 +152,12 @@ document.addEventListener('DOMContentLoaded', function() {
             filterLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
 
+            // Feedback: Dim the content while loading
+            if (dashboardStats) dashboardStats.style.opacity = '0.6';
+            if (transactionList) transactionList.style.opacity = '0.6';
+            if (dashboardStats) dashboardStats.style.transition = 'opacity 0.2s';
+            if (transactionList) transactionList.style.transition = 'opacity 0.2s';
+
             try {
                 const response = await fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -165,13 +171,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newStats = doc.querySelector('.balance-card');
                 const newTransactions = doc.querySelector('.transaction-list');
 
-                if (newStats && dashboardStats) dashboardStats.innerHTML = newStats.innerHTML;
-                if (newTransactions && transactionList) transactionList.innerHTML = newTransactions.innerHTML;
+                if (newStats && dashboardStats) {
+                    dashboardStats.innerHTML = newStats.innerHTML;
+                    dashboardStats.style.opacity = '1';
+                }
+                if (newTransactions && transactionList) {
+                    transactionList.innerHTML = newTransactions.innerHTML;
+                    transactionList.style.opacity = '1';
+                }
 
                 // Update Browser URL
                 window.history.pushState({}, '', url);
             } catch (error) {
                 console.error('AJAX Error:', error);
+                if (dashboardStats) dashboardStats.style.opacity = '1';
+                if (transactionList) transactionList.style.opacity = '1';
                 alert('Failed to load data. Please try again.');
             }
         });

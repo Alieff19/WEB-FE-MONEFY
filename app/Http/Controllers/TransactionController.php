@@ -26,6 +26,11 @@ class TransactionController extends Controller
             unset($data['to_wallet_id']);
         }
 
+        // Tambahkan jam sekarang jika hanya tanggal yang dikirim (agar tidak 00:00)
+        if (isset($data['transaction_date']) && strlen($data['transaction_date']) === 10) {
+            $data['transaction_date'] .= ' ' . date('H:i:s');
+        }
+
         $response = ApiHelper::call('post', 'transactions', $data);
 
         if ($response->successful()) {

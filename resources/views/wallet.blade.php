@@ -102,10 +102,10 @@
     }
     .btn-add-wallet-sm:hover { filter: brightness(1.1); transform: translateY(-2px); color: white; }
 
-    /* ─── WALLET CARDS ─── */
+    /* ─── WALLET CARDS (Premium Card Art) ─── */
     .wcard {
-        height: 180px;
-        border-radius: 20px;
+        height: 210px;
+        border-radius: 24px;
         padding: 1.5rem;
         color: white;
         position: relative;
@@ -113,30 +113,110 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        transition: all 0.2s ease-in-out;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border: none;
     }
-    .wcard:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .wcard:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
     
-    .wcard-cash { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
-    .wcard-bank { background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); }
-    .wcard-ewallet { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    .wcard-cash { background: linear-gradient(135deg, #FF8C42 0%, #FF3D00 100%); }
+    .wcard-bank { background: linear-gradient(135deg, #6A4CFF 0%, #3D2BB7 100%); }
+    .wcard-ewallet { background: linear-gradient(135deg, #00B4DB 0%, #0083B0 100%); }
 
-    .wcard-chip { width: 35px; height: 26px; background: rgba(255,255,255,0.2); border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); }
-    .wcard-name { font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-    .wcard-bal { font-size: 1.4rem; font-weight: 700; }
-    .wcard-bal-label { font-size: 0.7rem; opacity: 0.8; font-weight: 600; text-transform: uppercase; }
-
-    .btn-del {
-        background: rgba(255,255,255,0.15); color: white; border: none;
-        padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;
-        transition: 0.2s;
+    .wcard-watermark {
+        position: absolute;
+        top: -10px;
+        right: -20px;
+        font-size: 4.5rem;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.06);
+        white-space: nowrap;
+        pointer-events: none;
+        text-transform: uppercase;
+        font-style: italic;
+        letter-spacing: 4px;
+        z-index: 1;
     }
-    .btn-del:hover { background: #E53E3E; }
+
+    .wcard-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 2;
+    }
+    .wcard-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .btn-del-premium {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        backdrop-filter: blur(5px);
+        z-index: 3;
+    }
+    .btn-del-premium:hover { background: #FF4757; transform: scale(1.1); }
+
+    .wcard-chip-premium {
+        width: 44px;
+        height: 32px;
+        background: linear-gradient(135deg, #f0d075 0%, #b38600 100%);
+        border-radius: 6px;
+        position: relative;
+        padding: 4px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2px;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
+        z-index: 2;
+        margin-top: 10px;
+    }
+    .chip-line { border: 0.5px solid rgba(0,0,0,0.15); border-radius: 1px; }
+
+    .wcard-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        z-index: 2;
+    }
+    .wcard-bal-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        font-weight: 500;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .wcard-bal { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+
+    .wcard-brand-logo {
+        display: flex;
+        position: relative;
+        width: 45px;
+        height: 28px;
+    }
+    .brand-circle { width: 28px; height: 28px; border-radius: 50%; position: absolute; }
+    .circle-1 { background: rgba(235, 0, 27, 0.7); left: 0; }
+    .circle-2 { background: rgba(255, 95, 0, 0.7); left: 17px; }
 
     .add-more-box {
-        height: 180px;
+        height: 210px;
         border: 2px dashed #CBD5E0;
-        border-radius: 20px;
+        border-radius: 24px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -250,14 +330,36 @@
                         @foreach($activeWallets as $wallet)
                         <div class="col-md-6 col-xl-4">
                             <div class="wcard {{ $activeCat['cardClass'] }}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="wcard-chip"></div>
-                                    <button type="button" class="btn-del" onclick="confirmDelete('{{ $wallet['id'] }}', '{{ addslashes($wallet['name_wallet']) }}')">Delete</button>
-                                </div>
-                                <div>
+                                <div class="wcard-watermark">{{ $wallet['name_wallet'] }}</div>
+                                
+                                <div class="wcard-top">
                                     <div class="wcard-name">{{ $wallet['name_wallet'] }}</div>
-                                    <div class="wcard-bal-label">Balance</div>
-                                    <div class="wcard-bal">Rp {{ number_format((float)($wallet['balance'] ?? 0), 0, ',', '.') }}</div>
+                                    <button type="button" class="btn-del-premium" onclick="confirmDelete('{{ $wallet['id'] }}', '{{ addslashes($wallet['name_wallet']) }}')">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+
+                                <div class="wcard-middle">
+                                    <div class="wcard-chip-premium">
+                                        <div class="chip-line"></div>
+                                        <div class="chip-line"></div>
+                                        <div class="chip-line"></div>
+                                        <div class="chip-line"></div>
+                                    </div>
+                                </div>
+
+                                <div class="wcard-bottom">
+                                    <div class="wcard-balance-info">
+                                        <div class="wcard-bal-label">
+                                            Total Balance 
+                                            <i class="bi bi-eye-slash-fill ms-1" style="cursor:pointer;" onclick="toggleBalanceVisibility(this)"></i>
+                                        </div>
+                                        <div class="wcard-bal">Rp. {{ number_format((float)($wallet['balance'] ?? 0), 0, ',', '.') }}</div>
+                                    </div>
+                                    <div class="wcard-brand-logo">
+                                        <div class="brand-circle circle-1"></div>
+                                        <div class="brand-circle circle-2"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -313,15 +415,31 @@
 @push('scripts')
 <script>
 function confirmDelete(id, name) {
-    const modal = new bootstrap.Modal(document.getElementById('deleteWalletModal'));
+    const modalElement = document.getElementById('deleteWalletModal');
+    const modal = new bootstrap.Modal(modalElement);
     const form = document.getElementById('confirmDeleteForm');
     const nameSpan = document.getElementById('delWalletName');
     
-    // Set dynamic content
     nameSpan.textContent = `'${name}'`;
-    form.action = `/wallet/${id}`; // Sesuaikan dengan route destroy Anda
+    form.action = `/wallet/${id}`;
     
     modal.show();
+}
+
+function toggleBalanceVisibility(el) {
+    const balElement = el.closest('.wcard-balance-info').querySelector('.wcard-bal');
+    const isHidden = el.classList.contains('bi-eye-fill');
+    
+    if (!isHidden) {
+        // Hide
+        el.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
+        balElement.setAttribute('data-orig', balElement.innerText);
+        balElement.innerText = 'Rp. ••••••';
+    } else {
+        // Show
+        el.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
+        balElement.innerText = balElement.getAttribute('data-orig');
+    }
 }
 </script>
 @endpush

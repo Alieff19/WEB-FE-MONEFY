@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Monefy - Create Premium Wallet')
+@section('title', 'Monefy - Create Wallet')
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -179,6 +179,22 @@
         transition: all 0.4s;
         box-shadow: 0 20px 50px rgba(79, 70, 229, 0.3);
         display: flex; align-items: center; justify-content: center; gap: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-create-premium::after {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+        transform: rotate(45deg);
+        transition: 0.8s;
+        opacity: 0;
+    }
+    .btn-create-premium:hover::after {
+        opacity: 1;
+        left: 100%;
     }
     .btn-create-premium:hover {
         transform: translateY(-6px);
@@ -296,17 +312,6 @@
                     <small class="text-muted mt-2 d-block">Current available balance in this account.</small>
                 </div>
 
-                {{-- Theme Selection --}}
-                <div class="premium-field">
-                    <label class="premium-label">Choose Visual Theme</label>
-                    <div class="theme-grid">
-                        <div class="theme-opt active" style="background: linear-gradient(135deg, #7C3AED, #4F46E5)" data-grad="linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)"></div>
-                        <div class="theme-opt" style="background: linear-gradient(135deg, #F43F5E, #E11D48)" data-grad="linear-gradient(135deg, #F43F5E 0%, #E11D48 100%)"></div>
-                        <div class="theme-opt" style="background: linear-gradient(135deg, #10B981, #059669)" data-grad="linear-gradient(135deg, #10B981 0%, #059669 100%)"></div>
-                        <div class="theme-opt" style="background: linear-gradient(135deg, #F59E0B, #D97706)" data-grad="linear-gradient(135deg, #F59E0B 0%, #D97706 100%)"></div>
-                        <div class="theme-opt" style="background: linear-gradient(135deg, #0F172A, #1E293B)" data-grad="linear-gradient(135deg, #0F172A 0%, #1E293B 100%)"></div>
-                    </div>
-                </div>
 
                 <button type="submit" class="btn-create-premium">
                     <i class="bi bi-plus-circle-fill"></i> Initialize Wallet
@@ -330,9 +335,9 @@
     const cardPreview = document.getElementById('cardPreview');
 
     const configMap = {
-        'cash':     { label: 'Cash Wallet',    icon: 'bi-cash-stack',    default: 'My Cash' },
-        'bank':     { label: 'Bank Account',   icon: 'bi-bank2',         default: 'Savings Account' },
-        'e-wallet': { label: 'Digital Wallet', icon: 'bi-phone-vibrate', default: 'E-Wallet' }
+        'cash':     { label: 'Cash Wallet',    icon: 'bi-cash-stack',    default: 'My Cash',     grad: 'linear-gradient(135deg, #FF8C42 0%, #FF3D00 100%)' },
+        'bank':     { label: 'Bank Account',   icon: 'bi-bank2',         default: 'Savings Account', grad: 'linear-gradient(135deg, #6A4CFF 0%, #3D2BB7 100%)' },
+        'e-wallet': { label: 'Digital Wallet', icon: 'bi-phone-vibrate', default: 'E-Wallet',    grad: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)' }
     };
 
     function updatePreview() {
@@ -340,6 +345,7 @@
         const cfg = configMap[cat];
         labelType.innerText = cfg.label;
         viewIcon.className = `bi ${cfg.icon} preview-icon-bg`;
+        cardPreview.style.background = cfg.grad;
         
         if (!inputName.value || Object.values(configMap).some(c => c.default === inputName.value)) {
             inputName.value = cfg.default;
@@ -370,13 +376,6 @@
     inputCategory.addEventListener('change', updatePreview);
     updatePreview(); // Init
 
-    document.querySelectorAll('.theme-opt').forEach(dot => {
-        dot.addEventListener('click', function() {
-            document.querySelectorAll('.theme-opt').forEach(d => d.classList.remove('active'));
-            this.classList.add('active');
-            cardPreview.style.background = this.dataset.grad;
-        });
-    });
 
     document.getElementById('premiumWalletForm').addEventListener('submit', function() {
         // Strip dots before sending to backend

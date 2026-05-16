@@ -13,6 +13,16 @@
     @stack('styles')
 </head>
 <body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="loader-circle-dashed"></div>
+            <div class="loader-circle"></div>
+            <div class="loader-logo">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="Monefy Logo">
+            </div>
+        </div>
+    </div>
 
     <!-- Top Navigation Bar -->
     <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
@@ -90,195 +100,246 @@
     <!-- Add Transaction Modal -->
     <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow" style="overflow:hidden;">
-          <div class="modal-header modal-header-dynamic header-expense" id="modalHeader">
-            <h5 class="modal-title fw-bold" id="addTransactionModalLabel" style="color:var(--text-dark);">Add Transaction</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body p-4 pt-2">
-
-            {{-- ── Type Selector (3 custom buttons) ── --}}
-            <div class="d-flex gap-2 mb-4" id="txTypeSelector">
-              <button type="button" class="tx-type-btn flex-fill active" id="btn-expense" data-type="expense">
-                <i class="bi bi-arrow-up-circle-fill"></i>
-                <span>Expense</span>
-              </button>
-              <button type="button" class="tx-type-btn flex-fill" id="btn-income" data-type="income">
-                <i class="bi bi-arrow-down-circle-fill"></i>
-                <span>Income</span>
-              </button>
-              <button type="button" class="tx-type-btn flex-fill" id="btn-transfer" data-type="transfer">
-                <i class="bi bi-arrow-left-right"></i>
-                <span>Transfer</span>
-              </button>
+        <div class="modal-content border-0 shadow-2xl" style="border-radius: 32px; overflow: hidden; background: #fff;">
+          {{-- Header with Dynamic Gradient --}}
+          <div class="modal-header-premium p-4 text-center position-relative" id="modalHeaderPremium">
+            <div class="modal-close-btn-wrapper">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <h5 class="modal-title fw-bold text-white mb-0" id="addTransactionModalLabel">New Transaction</h5>
+            
+            {{-- Segmented Type Selector --}}
+            <div class="type-segmented-control mt-4">
+                <div class="type-segment-glider" id="typeGlider"></div>
+                <button type="button" class="type-segment active" data-type="expense" onclick="setActiveType('expense')">Expense</button>
+                <button type="button" class="type-segment" data-type="income" onclick="setActiveType('income')">Income</button>
+                <button type="button" class="type-segment" data-type="transfer" onclick="setActiveType('transfer')">Transfer</button>
+            </div>
+          </div>
 
-            {{-- ── Form ── --}}
-            <form class="api-form" id="addTransactionForm"
-                  action="{{ route('transaction.store') }}" method="POST">
+          <div class="modal-body p-4 pt-0">
+            <form class="api-form" id="addTransactionForm" action="{{ route('transaction.store') }}" method="POST">
               @csrf
               <input type="hidden" name="type" id="transactionTypeValue" value="expense">
 
-              {{-- Amount --}}
-              <div class="mb-3">
-                <label class="form-label fw-semibold text-muted small">Amount</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0 fw-bold"
-                        style="border-radius:12px 0 0 12px; color:var(--text-dark);">Rp</span>
-                  <input type="text" inputmode="numeric" name="amount" id="txAmount"
-                         class="form-control border-start-0 fs-3 fw-bold shadow-none"
-                         placeholder="0"
-                         style="border-radius:0 12px 12px 0; color:var(--primary-purple);"
-                         autocomplete="off" required>
-                </div>
+              {{-- Hero Amount Input --}}
+              <div class="hero-amount-section text-center py-4">
+                  <span class="currency-label">Rp</span>
+                  <input type="text" inputmode="numeric" name="amount" id="txAmount" 
+                         class="hero-amount-input" placeholder="0" autocomplete="off" required>
+                  <div class="amount-underline" id="amountUnderline"></div>
               </div>
 
-              {{-- Title --}}
-              <div class="mb-3">
-                <label class="form-label fw-semibold text-muted small">Title</label>
-                <input type="text" name="title" id="txTitle"
-                       class="form-control shadow-none"
-                       placeholder="e.g. Lunch, Monthly salary"
-                       style="border-radius:12px; padding:0.8rem 1.2rem;" required>
+              <div class="row g-3">
+                  {{-- Title --}}
+                  <div class="col-12">
+                    <div class="premium-field-group">
+                        <i class="bi bi-pencil-square field-icon"></i>
+                        <input type="text" name="title" id="txTitle" class="premium-field-input" placeholder="What's this for?" required>
+                    </div>
+                  </div>
+
+                  {{-- Category --}}
+                  <div class="col-md-6">
+                    <div class="premium-field-group">
+                        <i class="bi bi-tag field-icon"></i>
+                        <select name="category" id="txCategory" class="premium-field-input" required>
+                            <option value="" disabled selected>Category</option>
+                            <optgroup label="Expense">
+                                <option value="Food & Drink">Food & Drink</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Bills">Bills</option>
+                                <option value="Health">Health</option>
+                                <option value="Education">Education</option>
+                            </optgroup>
+                            <optgroup label="Income">
+                                <option value="Salary">Salary</option>
+                                <option value="Freelance">Freelance</option>
+                                <option value="Business">Business</option>
+                                <option value="Investment">Investment</option>
+                                <option value="Gift">Gift</option>
+                            </optgroup>
+                            <optgroup label="Other">
+                                <option value="Transfer">Transfer</option>
+                                <option value="Other">Other</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                  </div>
+
+                  {{-- Date --}}
+                  <div class="col-md-6">
+                    <div class="premium-field-group">
+                        <i class="bi bi-calendar3 field-icon"></i>
+                        <input type="date" name="transaction_date" id="txDate" class="premium-field-input" required>
+                    </div>
+                  </div>
+
+                  {{-- Wallet --}}
+                  <div class="col-12">
+                    <div class="premium-field-group">
+                        <i class="bi bi-wallet2 field-icon"></i>
+                        <select name="wallet_id" id="txWallet" class="premium-field-input" required>
+                            <option value="" disabled selected>Select Wallet</option>
+                        </select>
+                    </div>
+                  </div>
+
+                  {{-- Transfer To (hidden unless Transfer tab) --}}
+                  <div class="col-12" id="toWalletGroup" style="display:none;">
+                    <div class="premium-field-group border-primary">
+                        <i class="bi bi-arrow-right-circle field-icon text-primary"></i>
+                        <select name="to_wallet_id" id="txToWallet" class="premium-field-input">
+                            <option value="" disabled selected>Transfer To...</option>
+                        </select>
+                    </div>
+                  </div>
+
+                  {{-- Note --}}
+                  <div class="col-12">
+                    <div class="premium-field-group align-items-start py-2">
+                        <i class="bi bi-chat-left-text field-icon mt-2"></i>
+                        <textarea name="note" id="txNote" rows="2" class="premium-field-input" placeholder="Add a note... (optional)" style="resize:none;"></textarea>
+                    </div>
+                  </div>
               </div>
 
-              {{-- Category --}}
-              <div class="mb-3">
-                <label class="form-label fw-semibold text-muted small">Category</label>
-                <select name="category" id="txCategory"
-                        class="form-select shadow-none"
-                        style="border-radius:12px; padding:0.8rem 1.2rem;" required>
-                  <option value="" disabled selected>Select Category</option>
-                  <optgroup label="Expense">
-                    <option value="Food &amp; Drink">🍔 Food &amp; Drink</option>
-                    <option value="Transportation">🚗 Transportation</option>
-                    <option value="Entertainment">🎮 Entertainment</option>
-                    <option value="Shopping">🛍️ Shopping</option>
-                    <option value="Bills">🧾 Bills</option>
-                    <option value="Health">💊 Health</option>
-                    <option value="Education">📚 Education</option>
-                  </optgroup>
-                  <optgroup label="Income">
-                    <option value="Salary">💼 Salary</option>
-                    <option value="Freelance">💻 Freelance</option>
-                    <option value="Business">🏪 Business</option>
-                    <option value="Investment">📈 Investment</option>
-                    <option value="Gift">🎁 Gift</option>
-                  </optgroup>
-                  <optgroup label="Other">
-                    <option value="Transfer">🔄 Transfer</option>
-                    <option value="Other">📦 Other</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              {{-- Date --}}
-              <div class="mb-3">
-                <label class="form-label fw-semibold text-muted small">Date</label>
-                <input type="date" name="transaction_date" id="txDate"
-                       class="form-control shadow-none"
-                       style="border-radius:12px; padding:0.8rem 1.2rem;" required>
-              </div>
-
-              {{-- Wallet --}}
-              <div class="mb-3">
-                <label class="form-label fw-semibold text-muted small" id="walletFromLabel">Wallet</label>
-                <select name="wallet_id" id="txWallet"
-                        class="form-select shadow-none"
-                        style="border-radius:12px; padding:0.8rem 1.2rem;" required>
-                  <option value="" disabled selected>Loading wallets...</option>
-                </select>
-              </div>
-
-              {{-- Transfer To (hidden unless Transfer tab) --}}
-              <div class="mb-3" id="toWalletGroup" style="display:none;">
-                <label class="form-label fw-semibold text-muted small">Transfer To</label>
-                <select name="to_wallet_id" id="txToWallet"
-                        class="form-select shadow-none"
-                        style="border-radius:12px; padding:0.8rem 1.2rem;">
-                  <option value="" disabled selected>Select Destination Wallet</option>
-                </select>
-                <small class="text-muted">Must be a different wallet.</small>
-              </div>
-
-              {{-- Note --}}
-              <div class="mb-4">
-                <label class="form-label fw-semibold text-muted small">Note <span class="fw-normal text-muted">(optional)</span></label>
-                <textarea name="note" id="txNote" rows="2"
-                          class="form-control shadow-none"
-                          placeholder="Add a note..."
-                          style="border-radius:12px; padding:0.8rem 1.2rem; resize:none;"></textarea>
-              </div>
-
-              <button type="submit" id="txSubmitBtn"
-                      class="btn btn-expense-active w-100 py-3"
-                      style="border-radius:16px; font-weight:700; font-size:1rem; border:none;">
-                <i class="bi bi-arrow-up-circle-fill me-2"></i>Save Expense
+              <button type="submit" id="txSubmitBtn" class="btn-premium-submit mt-4 w-100">
+                <span>Save Transaction</span>
+                <i class="bi bi-arrow-right-short fs-4"></i>
               </button>
             </form>
-
           </div>
         </div>
       </div>
     </div>
 
-    {{-- ── CSS for type selector buttons ── --}}
+    {{-- ── CSS for Premium Transaction Modal ── --}}
     <style>
-    .tx-type-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 10px 8px;
-      border-radius: 14px;
-      border: 2px solid #E2E8F0;
-      background: #F8F9FA;
-      color: #A0AEC0;
-      font-weight: 600;
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
+    .modal-header-premium {
+        background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); /* Default Expense */
+        padding-bottom: 3rem !important;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .tx-type-btn i { font-size: 1.3rem; }
-    .tx-type-btn:hover { border-color: #CBD5E0; color: #718096; }
+    .modal-header-premium.bg-income { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    .modal-header-premium.bg-transfer { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
 
-    /* Active states per type */
-    .tx-type-btn.active[data-type="expense"] {
-      background: rgba(239,68,68,0.08);
-      border-color: var(--expense-red);
-      color: var(--expense-red);
+    .modal-close-btn-wrapper { position: absolute; top: 20px; right: 20px; z-index: 10; }
+
+    .type-segmented-control {
+        display: flex;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 4px;
+        position: relative;
+        margin: 0 10%;
     }
-    .tx-type-btn.active[data-type="income"] {
-      background: rgba(16,185,129,0.08);
-      border-color: var(--income-green);
-      color: var(--income-green);
+    .type-segment {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 8px 0;
+        position: relative;
+        z-index: 2;
+        transition: 0.3s;
+        opacity: 0.8;
     }
-    .tx-type-btn.active[data-type="transfer"] {
-      background: rgba(106,76,255,0.08);
-      border-color: var(--primary-purple);
-      color: var(--primary-purple);
+    .type-segment.active { opacity: 1; }
+    .type-segment-glider {
+        position: absolute;
+        height: calc(100% - 8px);
+        width: calc(33.333% - 4px);
+        background: white;
+        border-radius: 12px;
+        top: 4px;
+        left: 4px;
+        z-index: 1;
+        transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    /* Submit button colors */
-    .btn-expense-active  { background: var(--expense-red)  !important; color: white !important; }
-    .btn-income-active   { background: var(--income-green) !important; color: white !important; }
-    .btn-transfer-active { background: var(--primary-purple) !important; color: white !important; }
+    .hero-amount-section {
+        margin-top: -20px;
+        background: white;
+        border-radius: 24px 24px 0 0;
+        position: relative;
+        z-index: 5;
+    }
+    .hero-amount-input {
+        width: 100%;
+        border: none;
+        text-align: center;
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        outline: none;
+        padding: 0 1rem;
+    }
+    .currency-label {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #94A3B8;
+        display: block;
+        margin-bottom: -5px;
+    }
+    .amount-underline {
+        height: 4px;
+        width: 60px;
+        background: #EF4444;
+        margin: 5px auto 0;
+        border-radius: 2px;
+        transition: 0.5s;
+    }
 
-    .modal-header-dynamic {
-        transition: all 0.4s ease;
-        border-bottom: 0;
-        padding: 1.5rem 1.5rem 0.5rem;
+    .premium-field-group {
+        display: flex;
+        align-items: center;
+        background: #F8FAFC;
+        border: 2px solid #F1F5F9;
+        border-radius: 18px;
+        padding: 0.5rem 1.2rem;
+        transition: 0.3s;
     }
-    .header-expense { background: rgba(239,68,68,0.05); }
-    .header-income  { background: rgba(16,185,129,0.05); }
-    .header-transfer { background: rgba(106,76,255,0.05); }
-    .luxury-avatar-frame {
-        transition: all 0.3s ease;
+    .premium-field-group:focus-within {
+        background: white;
+        border-color: #CBD5E0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.03);
     }
-    .luxury-avatar-frame:hover {
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 8px 25px rgba(124, 76, 255, 0.5) !important;
+    .field-icon { font-size: 1.2rem; color: #94A3B8; margin-right: 12px; }
+    .premium-field-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 0.6rem 0;
+        font-weight: 600;
+        color: var(--text-dark);
+        outline: none;
+        font-size: 0.95rem;
     }
+    .premium-field-input::placeholder { color: #CBD5E0; font-weight: 400; }
+
+    .btn-premium-submit {
+        background: #EF4444;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 1.2rem;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.4s;
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.3);
+    }
+    .btn-premium-submit:hover { transform: translateY(-4px); filter: brightness(1.1); }
     </style>
 
     {{-- ── Script: Type selector + Wallet loader + Amount formatter ── --}}
@@ -301,80 +362,62 @@
         });
       }
 
-      // ── Type selector buttons ──
-      const typeButtons   = document.querySelectorAll('.tx-type-btn');
+      // ── Type selector logic ──
+      const typeSegments  = document.querySelectorAll('.type-segment');
       const typeInput     = document.getElementById('transactionTypeValue');
       const toWalletGrp   = document.getElementById('toWalletGroup');
       const txToWallet    = document.getElementById('txToWallet');
       const submitBtn     = document.getElementById('txSubmitBtn');
-      const walletFromLbl = document.getElementById('walletFromLabel');
       const txCategory    = document.getElementById('txCategory');
-      const modalHeader   = document.getElementById('modalHeader');
+      const modalHeader   = document.getElementById('modalHeaderPremium');
+      const typeGlider    = document.getElementById('typeGlider');
+      const amountLine    = document.getElementById('amountUnderline');
+      // amountInput is already declared above
 
-      const typeConfig = {
-        expense:  { icon: 'bi-arrow-up-circle-fill',  label: 'Save Expense',  btnClass: 'btn-expense-active',  walletLbl: 'Wallet', headerClass: 'header-expense' },
-        income:   { icon: 'bi-arrow-down-circle-fill', label: 'Save Income',   btnClass: 'btn-income-active',   walletLbl: 'Wallet', headerClass: 'header-income' },
-        transfer: { icon: 'bi-arrow-left-right',       label: 'Process Transfer', btnClass: 'btn-transfer-active', walletLbl: 'From Wallet', headerClass: 'header-transfer' },
+      const config = {
+        expense:  { color: '#EF4444', class: '',          glider: '4px',    title: 'Save Expense',    activeSegment: 0 },
+        income:   { color: '#10B981', class: 'bg-income',   glider: 'calc(33.333% + 2px)', title: 'Save Income', activeSegment: 1 },
+        transfer: { color: '#6366F1', class: 'bg-transfer', glider: 'calc(66.666% + 2px)', title: 'Process Transfer', activeSegment: 2 }
       };
 
-      function setActiveType(type) {
-        // Update hidden input
+      window.setActiveType = function(type) {
+        const cfg = config[type];
+        
+        // Update state
         typeInput.value = type;
-
-        // Update button active states
-        typeButtons.forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.type === type);
+        
+        // Update Glider & Buttons
+        typeGlider.style.left = cfg.glider;
+        typeSegments.forEach((s, idx) => {
+            s.classList.toggle('active', idx === cfg.activeSegment);
+            s.style.color = idx === cfg.activeSegment ? cfg.color : 'white';
         });
 
-        // Update submit button style + label
-        const cfg = typeConfig[type];
-        submitBtn.className = `btn ${cfg.btnClass} w-100 py-3`;
-        submitBtn.style.cssText = 'border-radius:16px; font-weight:700; font-size:1rem; border:none; transition: 0.3s;';
-        submitBtn.innerHTML = `<i class="bi ${cfg.icon} me-2"></i>${cfg.label}`;
-
-        // Update Header Color
-        modalHeader.className = `modal-header modal-header-dynamic ${cfg.headerClass}`;
-
-        // Update wallet label
-        walletFromLbl.textContent = cfg.walletLbl;
+        // Update Theme
+        modalHeader.className = `modal-header-premium p-4 text-center position-relative ${cfg.class}`;
+        amountLine.style.background = cfg.color;
+        amountInput.style.color = cfg.color;
+        submitBtn.style.background = cfg.color;
+        submitBtn.style.boxShadow = `0 15px 30px ${cfg.color}44`;
+        submitBtn.querySelector('span').innerText = cfg.title;
 
         // Filter Categories
         const groups = txCategory.querySelectorAll('optgroup');
-        let firstAvailableSet = false;
-        
         groups.forEach(group => {
             const label = group.getAttribute('label').toLowerCase();
-            if (type === 'transfer') {
-                if (label === 'other') group.style.display = '';
-                else group.style.display = 'none';
-            } else {
-                if (label === type) {
-                    group.style.display = '';
-                    firstAvailableSet = true;
-                } else if (label === 'other') {
-                    group.style.display = '';
-                } else {
-                    group.style.display = 'none';
-                }
-            }
+            if (type === 'transfer') group.style.display = label === 'other' ? '' : 'none';
+            else group.style.display = (label === type || label === 'other') ? '' : 'none';
         });
         
-        const selectedOpt = txCategory.options[txCategory.selectedIndex];
-        if (selectedOpt && selectedOpt.parentElement.style.display === 'none') {
-            txCategory.value = "";
-        }
+        if (txCategory.selectedOptions[0]?.parentElement.style.display === 'none') txCategory.value = "";
 
-        // Show/hide Transfer To field
-        if (type === 'transfer') {
-          toWalletGrp.style.display = '';
-          txToWallet.setAttribute('required', 'required');
-        } else {
-          toWalletGrp.style.display = 'none';
-          txToWallet.removeAttribute('required');
-        }
+        // Show/hide Transfer To
+        toWalletGrp.style.display = type === 'transfer' ? '' : 'none';
+        if (type === 'transfer') txToWallet.setAttribute('required', 'required');
+        else txToWallet.removeAttribute('required');
       }
 
-      typeButtons.forEach(btn => {
+      typeSegments.forEach(btn => {
         btn.addEventListener('click', () => setActiveType(btn.dataset.type));
       });
 
@@ -430,5 +473,51 @@
     <script src="{{ asset('assets/js/scripts.js') }}"></script>
     <script src="{{ asset('assets/js/api.js') }}"></script>
     @stack('scripts')
+    <!-- Preloader Script -->
+    <script>
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('preloader');
+            setTimeout(() => {
+                preloader.classList.add('preloader-hidden');
+            }, 300); // Reduced delay for better perceived performance
+        });
+
+        // Handle browser back/forward cache
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                const preloader = document.getElementById('preloader');
+                preloader.classList.add('preloader-hidden');
+            }
+        });
+
+        // Trigger preloader on menu transition (only for real page reloads)
+        window.addEventListener('beforeunload', function(e) {
+            // Check if the current active element is a link that shouldn't trigger preloader
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.tagName === 'A') {
+                const href = activeEl.getAttribute('href');
+                if (!href || 
+                    href.startsWith('#') || 
+                    href.startsWith('javascript:') || 
+                    activeEl.hasAttribute('data-bs-toggle') || 
+                    activeEl.classList.contains('no-preloader') ||
+                    activeEl.getAttribute('target') === '_blank') {
+                    return;
+                }
+            }
+            
+            const preloader = document.getElementById('preloader');
+            preloader.classList.remove('preloader-hidden');
+        });
+
+        // Fallback: If preloader stays too long (e.g. download links or canceled reloads)
+        // hide it after 5 seconds
+        const preloaderTimeout = setTimeout(() => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('preloader-hidden');
+        }, 5000);
+        
+        window.addEventListener('load', () => clearTimeout(preloaderTimeout));
+    </script>
 </body>
 </html>
