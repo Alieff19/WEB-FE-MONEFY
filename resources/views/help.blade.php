@@ -14,7 +14,7 @@
                 <!-- FAQ Item 1 -->
                 <div class="mb-4">
                     <h5 class="fw-bold"><i class="bi bi-question-circle text-muted me-2"></i> Bagaimana cara menambahkan dompet baru?</h5>
-                    <p class="text-muted ms-4">Anda dapat menuju ke halaman Profile, lalu klik opsi "Add your wallet". Isi nama dompet dan saldo awal Anda di sana.</p>
+                    <p class="text-muted ms-4">Anda dapat menuju ke menu <strong>Wallet</strong> (bisa melalui Quick Access di Dashboard atau navigasi utama), lalu klik tombol <strong>"Add Wallet"</strong> atau kotak <strong>"Add More"</strong> sesuai kategori dompet yang diinginkan. Setelah itu, isi nama dompet dan saldo awal Anda di form yang disediakan.</p>
                 </div>
 
                 <!-- FAQ Item 2 -->
