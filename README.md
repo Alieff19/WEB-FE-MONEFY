@@ -1,4 +1,4 @@
-# <p align="center"><br><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="150" alt="Laravel Logo"><br>💳 Monefy — Premium Financial Web Dashboard</p>
+# <p align="center"><br><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="150" alt="Laravel Logo"><br>Monefy Web Dashboard</p>
 
 <p align="center">
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-v12.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12"></a>
@@ -143,8 +143,3 @@ Jika Anda ingin melakukan perubahan pada tampilan atau CSS dan melihat hasilnya 
 ```bash
 npm run dev
 ```
-
----
-
-## ⚖️ License
-The Monefy Frontend application is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
