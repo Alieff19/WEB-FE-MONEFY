@@ -130,11 +130,54 @@
           <p class="text-[16px] leading-[24px] text-on-surface-variant mt-1">Your financial performance overview</p>
         </div>
         <div class="hidden md:flex gap-4">
-          <form action="{{ route('analytic') }}" method="GET">
+          @php
+              $selectedTrend = request('trend', 'weekly');
+              $selectedMonth = request('month', date('n'));
+              $selectedYear = request('year', date('Y'));
+              $months = [
+                  1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                  5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                  9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+              ];
+              // From a bit in the past up to 1 year ahead
+              $startYear = 2020;
+              $endYear = (int)date('Y') + 1;
+              $years = range($startYear, $endYear);
+          @endphp
+          <form action="{{ route('analytic') }}" method="GET" class="flex gap-2 items-center" onsubmit="
+              if(this.trend.value === 'yearly') { 
+                  if(this.month) this.month.disabled = true; 
+                  if(this.week) this.week.disabled = true; 
+              } else if(this.trend.value === 'monthly') {
+                  if(this.week) this.week.disabled = true; 
+              }
+          ">
              <select name="trend" onchange="this.form.submit()" class="px-6 py-2 rounded-full border border-outline-variant text-[12px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors bg-transparent appearance-none cursor-pointer">
-                 <option value="weekly" {{ request('trend') == 'weekly' || !request('trend') ? 'selected' : '' }}>Weekly</option>
-                 <option value="monthly" {{ request('trend') == 'monthly' ? 'selected' : '' }}>Monthly</option>
-                 <option value="yearly" {{ request('trend') == 'yearly' ? 'selected' : '' }}>Yearly</option>
+                 <option value="weekly" {{ $selectedTrend == 'weekly' ? 'selected' : '' }}>Weekly</option>
+                 <option value="monthly" {{ $selectedTrend == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                 <option value="yearly" {{ $selectedTrend == 'yearly' ? 'selected' : '' }}>Yearly</option>
+             </select>
+
+             @if($selectedTrend !== 'yearly')
+             <select name="month" onchange="this.form.submit()" class="px-6 py-2 rounded-full border border-outline-variant text-[12px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors bg-transparent appearance-none cursor-pointer">
+                 @foreach($months as $num => $name)
+                     <option value="{{ $num }}" {{ $selectedMonth == $num ? 'selected' : '' }}>{{ $name }}</option>
+                 @endforeach
+             </select>
+             @endif
+
+             @if($selectedTrend === 'weekly')
+             <select name="week" onchange="this.form.submit()" class="px-6 py-2 rounded-full border border-outline-variant text-[12px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors bg-transparent appearance-none cursor-pointer">
+                 @for($w = 1; $w <= 5; $w++)
+                     <option value="{{ $w }}" {{ request('week', 1) == $w ? 'selected' : '' }}>Week {{ $w }}</option>
+                 @endfor
+             </select>
+             @endif
+
+             <select name="year" onchange="this.form.submit()" class="px-6 py-2 rounded-full border border-outline-variant text-[12px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors bg-transparent appearance-none cursor-pointer">
+                 @foreach($years as $yr)
+                     <option value="{{ $yr }}" {{ $selectedYear == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                 @endforeach
              </select>
           </form>
         </div>
