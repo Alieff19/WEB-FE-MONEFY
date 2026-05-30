@@ -15,12 +15,22 @@ class WishlistController extends Controller
         $response = ApiHelper::call('get', 'wishlists');
         $wishlists = $response->successful() ? ($response->json()['data'] ?? []) : [];
 
-        return view('wishlist', compact('user', 'wishlists'));
+        $walletsResponse = ApiHelper::call('get', 'wallets');
+        $wallets = $walletsResponse->successful() ? ($walletsResponse->json()['data'] ?? []) : [];
+
+        return view('wishlist', compact('user', 'wishlists', 'wallets'));
     }
 
     public function store(Request $request)
     {
-        $response = ApiHelper::call('post', 'wishlists', $request->all());
+        $data = $request->all();
+        
+        // Pastikan target_amount dikirim sebagai angka tanpa pemisah ribuan
+        if (isset($data['target_amount'])) {
+            $data['target_amount'] = (float) preg_replace('/[^0-9]/', '', $data['target_amount']);
+        }
+
+        $response = ApiHelper::call('post', 'wishlists', $data);
 
         if ($response->successful()) {
             return redirect()->route('wishlist')->with('success', 'Wishlist berhasil ditambahkan!');
@@ -51,5 +61,19 @@ class WishlistController extends Controller
         }
 
         return back()->with('error', 'Gagal menghapus wishlist.');
+    }
+
+    public function pay(Request $request, $id)
+    {
+        $response = ApiHelper::call('post', "wishlists/{$id}/pay", [
+            'wallet_id' => $request->wallet_id,
+        ]);
+
+        if ($response->successful()) {
+            return redirect()->route('wishlist')->with('success', 'Wishlist berhasil dibayar!');
+        }
+
+        $message = $response->json()['message'] ?? 'Gagal membayar wishlist. Pastikan saldo cukup.';
+        return back()->with('error', $message);
     }
 }

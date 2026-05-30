@@ -41,6 +41,7 @@
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}"><i class="bi bi-house-door me-1"></i> Home</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('history') ? 'active' : '' }}" href="{{ route('history') }}"><i class="bi bi-clock-history me-1"></i> History</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('analytic') ? 'active' : '' }}" href="{{ route('analytic') }}"><i class="bi bi-graph-up-arrow me-1"></i> Analytic</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('ai.index') ? 'active' : '' }}" href="{{ route('ai.index') }}"><i class="bi bi-robot me-1 text-primary"></i> AI Assistant</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('profile') ? 'active' : '' }}" href="{{ route('profile') }}"><i class="bi bi-person me-1"></i> Profile</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">

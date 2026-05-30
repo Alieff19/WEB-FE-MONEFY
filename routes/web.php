@@ -44,6 +44,7 @@ Route::middleware(['checkApi'])->group(function () {
     Route::get('/wishlist',          [WishlistController::class, 'index'])->name('wishlist');
     Route::post('/wishlist',         [WishlistController::class, 'store'])->name('wishlist.store');
     Route::put('/wishlist/{id}',     [WishlistController::class, 'update'])->name('wishlist.update');
+    Route::post('/wishlist/{id}/pay', [WishlistController::class, 'pay'])->name('wishlist.pay');
     Route::delete('/wishlist/{id}',  [WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
     // Transactions & Wallets (AJAX endpoints — dipakai oleh Add Transaction modal)
@@ -56,6 +57,10 @@ Route::middleware(['checkApi'])->group(function () {
     Route::get('/wallet/create',     [WalletController::class, 'create'])->name('wallet.create');
     Route::post('/wallet',           [WalletController::class, 'store'])->name('wallet.store.page');
     Route::delete('/wallet/{id}',    [WalletController::class, 'destroy'])->name('wallet.destroy');
+
+    // AI Chat
+    Route::get('/ai-assistant', [\App\Http\Controllers\AiController::class, 'index'])->name('ai.index');
+    Route::post('/ai-assistant/chat', [\App\Http\Controllers\AiController::class, 'chat'])->name('ai.chat');
 
     // Logout
     Route::post('/logout', [ProfileController::class, 'logout'])->name('logout');
