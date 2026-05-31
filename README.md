@@ -135,11 +135,3 @@ Setelah server aktif, Anda dapat langsung mengakses aplikasi melalui peramban (b
 ### **[http://localhost:8001](http://localhost:8001)**
 
 ---
-
-## Mode Pengembangan (Development Mode)
-
-Jika Anda ingin melakukan perubahan pada tampilan atau CSS dan melihat hasilnya secara langsung (Hot Module Replacement), jalankan server development Vite di terminal terpisah:
-
-```bash
-npm run dev
-```
