@@ -16,19 +16,19 @@ Designed with modern UI/UX paradigms—featuring dark glassmorphism, dynamic AJA
 
 ---
 
-## 🎨 Key Features
+## Key Features
 
-- **📊 Dynamic Dashboard**: Surfacing total balance, real-time monthly income, and daily expenses with rich formatting.
-- **⚡ AJAX-based Fast Filtering**: Swap recent transaction lists dynamically (by *Day, Week, Month, Year, All*) using standard JavaScript Fetch API without page reloads.
-- **👛 Wallet Management**: Complete CRUD operations for multiple wallets (Cash, Bank Accounts, E-Wallets) featuring live CSS previews of cards.
-- **🧾 Bills Management**: Track premium utility bills, select dynamic payment wallets, validate balances, and log history.
-- **🎯 Smart Wishlists**: View financial goal progress, saving tracking, and modern checkouts.
-- **📈 Advanced Analytics**: Clear category-wise visual breakdowns of user expenditure.
-- **🔐 Secure Client Portal**: Custom register/login panels with seamless session state persistence.
+- **Dynamic Dashboard**: Surfacing total balance, real-time monthly income, and daily expenses with rich formatting.
+- **AJAX-based Fast Filtering**: Swap recent transaction lists dynamically (by *Day, Week, Month, Year, All*) using standard JavaScript Fetch API without page reloads.
+- **Wallet Management**: Complete CRUD operations for multiple wallets (Cash, Bank Accounts, E-Wallets) featuring live CSS previews of cards.
+- **Bills Management**: Track premium utility bills, select dynamic payment wallets, validate balances, and log history.
+- **Smart Wishlists**: View financial goal progress, saving tracking, and modern checkouts.
+- **Advanced Analytics**: Clear category-wise visual breakdowns of user expenditure.
+- **Secure Client Portal**: Custom register/login panels with seamless session state persistence.
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Component | Technology | Version |
 | :--- | :--- | :--- |
@@ -40,7 +40,7 @@ Designed with modern UI/UX paradigms—featuring dark glassmorphism, dynamic AJA
 
 ---
 
-## 📂 Directory Structure
+## Directory Structure
 
 Here are the key frontend files and directories to assist in development:
 
@@ -67,7 +67,7 @@ Frontend-Web/
 
 ---
 
-## ⚙️ System Prerequisites
+## System Prerequisites
 
 Ensure you have the following installed on your machine:
 1. **PHP** `>= 8.2`
@@ -78,7 +78,7 @@ Ensure you have the following installed on your machine:
 
 ---
 
-## 🚀 Step-by-Step Installation & Setup
+## Step-by-Step Installation & Setup
 
 Follow these simple instructions to set up the frontend project locally:
 
@@ -123,7 +123,7 @@ npm run build
 
 ---
 
-## 🖥️ Menjalankan Aplikasi Frontend (Port 8001)
+## Menjalankan Aplikasi Frontend (Port 8001)
 
 Untuk menjalankan server frontend secara lokal agar **berjalan di port 8001**, jalankan perintah Laravel Artisan berikut di terminal Anda:
 
@@ -132,11 +132,11 @@ php artisan serve --port=8001
 ```
 
 Setelah server aktif, Anda dapat langsung mengakses aplikasi melalui peramban (browser) di alamat:
-### 🌐 **[http://localhost:8001](http://localhost:8001)**
+### **[http://localhost:8001](http://localhost:8001)**
 
 ---
 
-## 🔄 Mode Pengembangan (Development Mode)
+## Mode Pengembangan (Development Mode)
 
 Jika Anda ingin melakukan perubahan pada tampilan atau CSS dan melihat hasilnya secara langsung (Hot Module Replacement), jalankan server development Vite di terminal terpisah:
 
