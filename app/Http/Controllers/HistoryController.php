@@ -16,11 +16,14 @@ class HistoryController extends Controller
         $histories = $response->successful() ? $response->json() : [];
 
         $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
-        $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
+        $summary = $summaryResponse->successful() ? $summaryResponse->json() : [];
+        $user = $summary['user'] ?? null;
+        $totalBalance = $summary['total_balance'] ?? 0;
 
         return view('history', [
             'histories' => $histories,
             'user' => $user,
+            'totalBalance' => $totalBalance,
         ]);
     }
 }

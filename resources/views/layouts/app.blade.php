@@ -45,6 +45,28 @@
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('profile') ? 'active' : '' }}" href="{{ route('profile') }}"><i class="bi bi-person me-1"></i> Profile</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Notification Bell Dropdown -->
+                    <div class="dropdown me-1" id="billNotificationDropdown">
+                        <button class="btn btn-link position-relative p-2 text-secondary hover-primary animate-pulse-mic" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="outline: none; box-shadow: none; border: none; background: transparent;">
+                            <i class="bi bi-bell-fill fs-4" style="color: #7C4CFF;"></i>
+                            <span id="billBadgeCount" class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger d-none" style="padding: 4px 6px; font-size: 0.65rem;">
+                                0
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow-lg" style="width: 320px; border-radius: 20px; font-size: 0.9rem; z-index: 1050; margin-top: 10px;">
+                            <li class="px-3 py-2 fw-bold text-dark border-bottom d-flex justify-content-between align-items-center">
+                                <span>Tagihan Mendatang</span>
+                                <span class="badge" id="dropdownUnpaidCount" style="color: #7C4CFF !important; background-color: #F3F0FF !important; font-size: 0.75rem;">0 Tagihan</span>
+                            </li>
+                            <div id="dropdownBillsList" style="max-height: 250px; overflow-y: auto;">
+                                <li class="text-center py-3 text-muted">Memuat tagihan...</li>
+                            </div>
+                            <li class="text-center pt-2 border-top">
+                                <a class="dropdown-item fw-bold" href="{{ route('bills') }}" style="border-radius: 12px; color: #7C4CFF;">Lihat Semua Tagihan</a>
+                            </li>
+                        </ul>
+                    </div>
+
                     <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
                         <i class="bi bi-plus-circle me-1"></i> Add Transaction
                     </button>
@@ -343,6 +365,42 @@
         box-shadow: 0 15px 30px rgba(239, 68, 68, 0.3);
     }
     .btn-premium-submit:hover { transform: translateY(-4px); filter: brightness(1.1); }
+
+    /* ─── BILL NOTIFICATION STYLES ─── */
+    .bill-notification-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 360px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(124, 76, 255, 0.2);
+        border-radius: 20px;
+        padding: 1.2rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(124, 76, 255, 0.05);
+        z-index: 2000;
+        transform: translateY(150%);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .bill-notification-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .dropdown-bill-item {
+        transition: all 0.2s;
+        border-radius: 12px;
+        padding: 8px 12px;
+    }
+    .dropdown-bill-item:hover {
+        background-color: #F8FAFC;
+    }
+    .hover-primary:hover i {
+        color: #7C4CFF !important;
+        transform: scale(1.1);
+        transition: all 0.2s;
+    }
     </style>
 
     {{-- ── Script: Type selector + Wallet loader + Amount formatter ── --}}
@@ -521,6 +579,191 @@
         }, 5000);
         
         window.addEventListener('load', () => clearTimeout(preloaderTimeout));
+    </script>
+
+    <!-- Floating Bill Toast Notification -->
+    <div id="billToastNotification" class="bill-notification-toast">
+        <div class="d-flex align-items-start gap-3">
+            <div class="toast-icon-wrapper text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; min-width: 42px; background-color: #FFA502 !important;">
+                <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark mb-1">Tagihan Perlu Dibayar!</div>
+                <div id="billToastText" class="small text-muted mb-2">Tagihan Wifi Indihome sebesar Rp 350.000 jatuh tempo hari ini.</div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-sm btn-light border" id="btnDismissToast" style="border-radius: 8px; font-size: 0.75rem; font-weight: 600;">Nanti</button>
+                    <a href="{{ route('bills') }}" class="btn btn-sm btn-primary text-white" style="background-color: #7C4CFF; border-color: #7C4CFF; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none;">Bayar Sekarang</a>
+                </div>
+            </div>
+            <button type="button" class="btn-close ms-auto" id="btnCloseToast" style="font-size: 0.75rem; outline: none; box-shadow: none;"></button>
+        </div>
+    </div>
+
+    <!-- Script: Global Bill Reminders -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const billBadgeCount = document.getElementById('billBadgeCount');
+        const dropdownUnpaidCount = document.getElementById('dropdownUnpaidCount');
+        const dropdownBillsList = document.getElementById('dropdownBillsList');
+        const billToastNotification = document.getElementById('billToastNotification');
+        const billToastText = document.getElementById('billToastText');
+        const btnCloseToast = document.getElementById('btnCloseToast');
+        const btnDismissToast = document.getElementById('btnDismissToast');
+
+        if (!billBadgeCount) return;
+
+        // Fetch bills from our new AJAX endpoint
+        fetch('{{ route("bills") }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch bills');
+            return response.json();
+        })
+        .then(bills => {
+            const unpaid = bills.filter(b => b.status === 'unpaid');
+            
+            // 1. Update Badge
+            if (unpaid.length > 0) {
+                billBadgeCount.textContent = unpaid.length;
+                billBadgeCount.classList.remove('d-none');
+                dropdownUnpaidCount.textContent = `${unpaid.length} Tagihan`;
+            } else {
+                billBadgeCount.classList.add('d-none');
+                dropdownUnpaidCount.textContent = `0 Tagihan`;
+            }
+
+            // 2. Populate Dropdown
+            dropdownBillsList.innerHTML = '';
+            if (unpaid.length === 0) {
+                dropdownBillsList.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-patch-check-fill text-success fs-3 mb-2 d-block"></i>
+                        <span class="small fw-semibold">Semua tagihan lunas!</span>
+                    </div>
+                `;
+            } else {
+                unpaid.forEach(bill => {
+                    const dueDate = new Date(bill.due_date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    dueDate.setHours(0, 0, 0, 0);
+                    
+                    const timeDiff = dueDate.getTime() - today.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    
+                    let dueLabel = '';
+                    let dueClass = 'text-warning';
+                    
+                    if (daysDiff === 0) {
+                        dueLabel = 'Jatuh tempo hari ini';
+                        dueClass = 'text-danger fw-bold';
+                    } else if (daysDiff < 0) {
+                        dueLabel = `Terlewat ${Math.abs(daysDiff)} hari`;
+                        dueClass = 'text-danger fw-bold';
+                    } else {
+                        dueLabel = `Jatuh tempo ${daysDiff} hari lagi`;
+                        dueClass = 'text-muted';
+                    }
+
+                    dropdownBillsList.innerHTML += `
+                        <div class="dropdown-bill-item d-flex align-items-center justify-content-between p-2 mx-1 my-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; color: #7C4CFF;">
+                                    <i class="bi bi-lightning-charge-fill"></i>
+                                </div>
+                                <div class="text-start">
+                                    <div class="fw-bold text-dark" style="font-size: 0.85rem;">${bill.provider}</div>
+                                    <div class="small ${dueClass}" style="font-size: 0.75rem;">${dueLabel}</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-dark" style="font-size: 0.85rem;">Rp ${parseInt(bill.amount).toLocaleString('id-ID')}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 3. Toast Alert check (if any bill is due today or tomorrow or overdue, and not shown this session)
+            const urgentBills = unpaid.filter(b => {
+                const dueDate = new Date(b.due_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 3600 * 24));
+                return daysDiff <= 1; // Due today, tomorrow, or overdue
+            });
+
+            if (urgentBills.length > 0 && !sessionStorage.getItem('bill_toast_shown')) {
+                const topBill = urgentBills[0];
+                const dueDate = new Date(topBill.due_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 3600 * 24));
+
+                let statusStr = '';
+                if (daysDiff === 0) statusStr = 'jatuh tempo hari ini';
+                else if (daysDiff < 0) statusStr = 'telah terlewat jatuh tempo';
+                else statusStr = 'jatuh tempo besok';
+
+                billToastText.innerHTML = `Tagihan <b>${topBill.provider}</b> sebesar <b>Rp ${parseInt(topBill.amount).toLocaleString('id-ID')}</b> ${statusStr}.`;
+                
+                setTimeout(() => {
+                    billToastNotification.classList.add('show');
+                    playBillNotificationSound();
+                    sessionStorage.setItem('bill_toast_shown', 'true');
+                }, 1500);
+            }
+        })
+        .catch(err => console.warn('Notification center error:', err));
+
+        const dismissToast = () => {
+            billToastNotification.classList.remove('show');
+        };
+
+        if (btnCloseToast) btnCloseToast.addEventListener('click', dismissToast);
+        if (btnDismissToast) btnDismissToast.addEventListener('click', dismissToast);
+    });
+
+    function playBillNotificationSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc1 = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc1.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            
+            osc1.start(audioCtx.currentTime);
+            osc1.stop(audioCtx.currentTime + 0.3);
+
+            setTimeout(() => {
+                const osc2 = audioCtx.createOscillator();
+                const gainNode2 = audioCtx.createGain();
+                osc2.connect(gainNode2);
+                gainNode2.connect(audioCtx.destination);
+                
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                gainNode2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gainNode2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                
+                osc2.start(audioCtx.currentTime);
+                osc2.stop(audioCtx.currentTime + 0.4);
+            }, 140);
+        } catch (e) {
+            console.warn('AudioContext sound blocked or unsupported:', e);
+        }
+    }
     </script>
 </body>
 </html>

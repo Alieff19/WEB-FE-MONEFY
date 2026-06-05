@@ -40,6 +40,16 @@
             border-top: 1px dashed #e2e8f0;
             margin: 1.5rem 0;
         }
+        #btnExportPDF {
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        #btnExportPDF:hover {
+            background-color: #7C4CFF !important;
+            color: white !important;
+            border-color: #7C4CFF !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 76, 255, 0.25);
+        }
     </style>
 @endpush
 
@@ -67,9 +77,14 @@
             <div class="col-lg-9">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="fw-bold mb-0" style="color: var(--text-dark);">History Logs</h4>
-                    <div class="position-relative" style="width: 250px;">
-                        <input type="text" id="searchInput" class="form-control rounded-pill pe-5" placeholder="Search history...">
-                        <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="btnExportPDF" data-balance="{{ $totalBalance ?? 0 }}" class="btn rounded-pill px-3 fw-bold d-flex align-items-center gap-2" style="border: 2px solid #7C4CFF; color: #7C4CFF; background: transparent; font-size: 0.9rem;">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> Export PDF
+                        </button>
+                        <div class="position-relative" style="width: 220px;">
+                            <input type="text" id="searchInput" class="form-control rounded-pill pe-5" placeholder="Search history...">
+                            <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -249,6 +264,289 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const btnExportPDF = document.getElementById('btnExportPDF');
+    if (btnExportPDF) {
+        btnExportPDF.addEventListener('click', function() {
+            const rows = document.querySelectorAll('tbody tr');
+            let transactions = [];
+            let totalIncome = 0;
+            let totalExpense = 0;
+            
+            // Definisikan URL logo aplikasi
+            const logoUrl = '{{ asset("assets/images/logo.png") }}';
+            
+            // Ambil Saldo Aktif Saat Ini dari data attribute
+            const actualBalance = parseFloat(btnExportPDF.dataset.balance) || 0;
+
+            rows.forEach(row => {
+                if (row.style.display === 'none') return;
+                if (row.cells.length === 1 && row.cells[0].textContent.includes('No transactions')) return;
+
+                const type = row.dataset.type;
+                const title = row.dataset.title;
+                const category = row.dataset.category;
+                const date = row.dataset.date;
+                const amountText = row.dataset.amount || 'Rp 0';
+                
+                const amountVal = parseFloat(amountText.replace(/[^\d]/g, '')) || 0;
+
+                if (type === 'income') {
+                    totalIncome += amountVal;
+                } else if (type === 'expense') {
+                    totalExpense += amountVal;
+                }
+
+                transactions.push({
+                    type,
+                    title,
+                    category,
+                    date,
+                    amountText
+                });
+            });
+
+            if (transactions.length === 0) {
+                alert('Tidak ada data transaksi untuk diekspor.');
+                return;
+            }
+
+            const netBalance = totalIncome - totalExpense;
+            const activePeriodBtn = document.querySelector('.filter-sidebar-btn.active');
+            const activePeriod = activePeriodBtn ? activePeriodBtn.textContent.trim() : 'Semua';
+
+            const printFrame = document.createElement('iframe');
+            printFrame.style.position = 'fixed';
+            printFrame.style.right = '0';
+            printFrame.style.bottom = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = '0';
+            document.body.appendChild(printFrame);
+
+            const doc = printFrame.contentWindow.document;
+            doc.open();
+            
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Laporan Keuangan Monefy</title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+                <style>
+                    body {
+                        font-family: 'Inter', sans-serif;
+                        color: #1e293b;
+                        padding: 40px;
+                        margin: 0;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 2px solid #f1f5f9;
+                        padding-bottom: 20px;
+                        margin-bottom: 30px;
+                    }
+                    .header-logo {
+                        font-size: 24px;
+                        font-weight: 800;
+                        color: #7C4CFF;
+                    }
+                    .header-title {
+                        font-size: 13px;
+                        color: #64748b;
+                        text-align: right;
+                        line-height: 1.5;
+                    }
+                    .title-report {
+                        font-size: 22px;
+                        font-weight: 700;
+                        margin-top: 5px;
+                        color: #0f172a;
+                    }
+                    .summary-grid {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 15px;
+                        margin-bottom: 35px;
+                    }
+                    .summary-card {
+                        background: #f8fafc;
+                        border: 1px solid #f1f5f9;
+                        border-radius: 12px;
+                        padding: 16px;
+                    }
+                    .summary-label {
+                        font-size: 10px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        color: #64748b;
+                        letter-spacing: 0.5px;
+                        margin-bottom: 6px;
+                    }
+                    .summary-value {
+                        font-size: 16px;
+                        font-weight: 700;
+                    }
+                    .value-income { color: #10B981; }
+                    .value-expense { color: #EF4444; }
+                    .value-net { color: #0f172a; }
+                    
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 40px;
+                    }
+                    th {
+                        background: #f8fafc;
+                        font-size: 11px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        color: #64748b;
+                        text-align: left;
+                        padding: 12px 16px;
+                        border-bottom: 2px solid #e2e8f0;
+                    }
+                    td {
+                        padding: 14px 16px;
+                        font-size: 13px;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 4px 8px;
+                        border-radius: 20px;
+                        font-size: 10px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                    }
+                    .badge-income { background: #d1fae5; color: #065f46; }
+                    .badge-expense { background: #fee2e2; color: #991b1b; }
+                    .badge-transfer { background: #f3e8ff; color: #6b21a8; }
+                    
+                    .text-right { text-align: right; }
+                    .footer {
+                        text-align: center;
+                        font-size: 11px;
+                        color: #94a3b8;
+                        border-top: 1px solid #f1f5f9;
+                        padding-top: 20px;
+                        margin-top: 50px;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <img src="${logoUrl}" alt="Monefy Logo" style="height: 75px; object-fit: contain; margin-bottom: 8px; display: block;">
+                        <div class="title-report">Laporan Riwayat Keuangan</div>
+                    </div>
+                    <div class="header-title">
+                        <div>Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                        <div>Periode Filter: <strong>${activePeriod}</strong></div>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Total Pemasukan</div>
+                        <div class="summary-value value-income">Rp ${totalIncome.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Total Pengeluaran</div>
+                        <div class="summary-value value-expense">Rp ${totalExpense.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="summary-card" style="background: ${netBalance >= 0 ? '#f0fdf4' : '#fdf2f2'}; border-color: ${netBalance >= 0 ? '#dcfce7' : '#fee2e2'};">
+                        <div class="summary-label">Selisih Periode</div>
+                        <div class="summary-value value-net" style="color: ${netBalance >= 0 ? '#166534' : '#991b1b'};">Rp ${netBalance.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="summary-card" style="background: #f5f3ff; border-color: #ddd6fe;">
+                        <div class="summary-label" style="color: #6d28d9;">Saldo Saat Ini</div>
+                        <div class="summary-value" style="color: #6d28d9;">Rp ${actualBalance.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Jenis</th>
+                            <th>Deskripsi / Kategori</th>
+                            <th>Waktu & Tanggal</th>
+                            <th class="text-right">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${transactions.map(t => {
+                            let badgeClass = 'badge-expense';
+                            let sign = '-';
+                            if (t.type === 'income') {
+                                badgeClass = 'badge-income';
+                                sign = '+';
+                            } else if (t.type === 'transfer') {
+                                badgeClass = 'badge-transfer';
+                                sign = '↔ ';
+                            }
+
+                            return `
+                                <tr>
+                                    <td><span class="badge ${badgeClass}">${t.type}</span></td>
+                                    <td>
+                                        <div style="font-weight: 600;">${t.title}</div>
+                                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Kategori: ${t.category}</div>
+                                    </td>
+                                    <td style="color: #64748b;">${t.date}</td>
+                                    <td class="text-right" style="font-weight: 700; color: ${t.type === 'income' ? '#10B981' : (t.type === 'transfer' ? '#7C4CFF' : '#EF4444')};">
+                                        ${sign}${t.amountText}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    Laporan ini dibuat secara otomatis oleh aplikasi pengelolaan keuangan Monefy pada ${new Date().toLocaleString('id-ID')}.
+                </div>
+            </body>
+            </html>
+            `;
+
+            doc.write(htmlContent);
+            doc.close();
+
+            // Tunggu gambar logo dimuat agar tidak blank/kosong saat dicetak
+            let printTriggered = false;
+            const triggerPrint = () => {
+                if (printTriggered) return;
+                printTriggered = true;
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                setTimeout(() => {
+                    if (printFrame.parentNode) {
+                        document.body.removeChild(printFrame);
+                    }
+                }, 1500);
+            };
+
+            const logoImg = doc.querySelector('img');
+            if (logoImg) {
+                logoImg.onload = triggerPrint;
+                logoImg.onerror = triggerPrint;
+                if (logoImg.complete) {
+                    triggerPrint();
+                }
+            } else {
+                triggerPrint();
+            }
+
+            // Fallback maksimal 2 detik jika koneksi lambat
+            setTimeout(triggerPrint, 2000);
+        });
+    }
 });
 
 // Search logic

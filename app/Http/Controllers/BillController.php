@@ -9,12 +9,16 @@ class BillController extends Controller
 {
     public function index()
     {
-        $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
-        $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
-        
         $billsResponse = ApiHelper::call('get', 'bills');
         $bills = $billsResponse->successful() ? $billsResponse->json() : [];
 
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json($bills);
+        }
+
+        $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
+        $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
+        
         $walletsResponse = ApiHelper::call('get', 'wallets');
         $walletsData = $walletsResponse->successful() ? $walletsResponse->json() : [];
         $wallets = $walletsData['data'] ?? [];

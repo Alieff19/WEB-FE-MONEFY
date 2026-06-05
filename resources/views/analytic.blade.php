@@ -285,6 +285,87 @@
           </div>
         </div>
       </section>
+
+      <!-- Financial Sandbox Simulator Card -->
+      <section class="mt-8 mb-8">
+        <div class="bg-white rounded-xxl p-8 shadow-sm border border-surface-container">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+              <h2 class="text-[20px] font-semibold font-headline-sm text-on-surface">Financial Goal Sandbox Simulator</h2>
+              <p class="text-[14px] text-on-surface-variant mt-1">Simulasikan target impian Anda berdasarkan kemampuan menabung bulanan</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 bg-[#4a40c1]/10 text-[#4a40c1] text-[12px] font-bold rounded-full">Interactive Sandbox</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Side: Sliders & Settings (5 cols) -->
+            <div class="lg:col-span-5 space-y-6">
+              <!-- Preset Templates -->
+              <div>
+                <label class="block text-[14px] font-bold text-on-surface-variant mb-2">Pilih Target Impian</label>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn-preset-goal px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold hover:bg-surface-container transition-all" data-amount="15000000" data-name="Beli Gadget Baru">📱 Gadget (15jt)</button>
+                  <button type="button" class="btn-preset-goal px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold hover:bg-surface-container transition-all" data-amount="30000000" data-name="Liburan Impian">✈️ Liburan (30jt)</button>
+                  <button type="button" class="btn-preset-goal px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold hover:bg-surface-container transition-all" data-amount="50000000" data-name="Modal Usaha">💼 Modal Usaha (50jt)</button>
+                  <button type="button" class="btn-preset-goal px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold hover:bg-surface-container transition-all" data-amount="100000000" data-name="Dana Darurat">🛡️ Dana Darurat (100jt)</button>
+                </div>
+              </div>
+
+              <!-- Input Name -->
+              <div>
+                <label for="simGoalName" class="block text-[14px] font-bold text-on-surface-variant mb-1">Nama Impian</label>
+                <input type="text" id="simGoalName" value="Target Impian Saya" class="w-full px-4 py-2 rounded-lg border border-outline-variant text-[14px] focus:ring-primary focus:border-primary" style="outline: none;">
+              </div>
+
+              <!-- Slider Target Amount -->
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label for="simTargetAmount" class="text-[14px] font-bold text-on-surface-variant">Target Dana</label>
+                  <span id="labelTargetAmount" class="text-[14px] font-bold text-primary">Rp 15.000.000</span>
+                </div>
+                <input type="range" id="simTargetAmount" min="1000000" max="250000000" step="1000000" value="15000000" class="w-full accent-primary">
+              </div>
+
+              <!-- Slider Monthly Saving -->
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label for="simMonthlySaving" class="text-[14px] font-bold text-on-surface-variant">Kemampuan Menabung / Bulan</label>
+                  <span id="labelMonthlySaving" class="text-[14px] font-bold text-green-600">Rp 1.000.000</span>
+                </div>
+                <input type="range" id="simMonthlySaving" min="100000" max="20000000" step="100000" value="1000000" class="w-full accent-primary">
+              </div>
+
+            </div>
+
+            <!-- Right Side: Chart & Milestones (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col justify-between">
+              <div class="w-full bg-surface-container-low/30 rounded-xl border border-surface-container-high p-4 mb-6" style="height: 240px;">
+                <canvas id="simulatorChart"></canvas>
+              </div>
+
+              <!-- Results Cards -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-surface-container rounded-xl p-4 border border-outline-variant">
+                  <span class="text-[12px] text-on-surface-variant block mb-1">Estimasi Waktu</span>
+                  <h4 id="resultDuration" class="text-[18px] md:text-[20px] font-bold text-primary">15 Bulan</h4>
+                </div>
+                <div class="bg-green-100/30 rounded-xl p-4 border border-green-200/50">
+                  <span class="text-[12px] text-on-surface-variant block mb-1">Target Tercapai</span>
+                  <h4 id="resultTargetDate" class="text-[18px] md:text-[20px] font-bold text-green-600">September 2027</h4>
+                </div>
+              </div>
+
+              <!-- Recommendation Text -->
+              <div class="mt-4 p-4 rounded-xl bg-surface-container/50 border border-outline-variant text-[13px] text-on-surface-variant flex items-start gap-2">
+                <span class="material-symbols-outlined text-[18px] text-primary mt-0.5">info</span>
+                <p id="recommendationMessage">Dengan menabung Rp 1.000.000 per bulan ditambah imbal hasil investasi 5% pertahun, Anda membutuhkan waktu 15 bulan untuk mewujudkan "Beli Gadget Baru" senilai Rp 15.000.000.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
   </div>
 </div>
 
@@ -477,6 +558,137 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial render
     renderCategory('expense');
+
+    // 4. Financial Goal Sandbox Simulator
+    const simTargetAmountInput = document.getElementById('simTargetAmount');
+    const simMonthlySavingInput = document.getElementById('simMonthlySaving');
+    const simGoalNameInput = document.getElementById('simGoalName');
+    
+    const labelTargetAmount = document.getElementById('labelTargetAmount');
+    const labelMonthlySaving = document.getElementById('labelMonthlySaving');
+    
+    const resultDuration = document.getElementById('resultDuration');
+    const resultTargetDate = document.getElementById('resultTargetDate');
+    const recommendationMessage = document.getElementById('recommendationMessage');
+    
+    const presetButtons = document.querySelectorAll('.btn-preset-goal');
+    const ctxSim = document.getElementById('simulatorChart');
+    let simChartInstance = null;
+
+    function runSimulation() {
+        const targetAmount = parseFloat(simTargetAmountInput.value);
+        const monthlySaving = parseFloat(simMonthlySavingInput.value);
+        const goalName = simGoalNameInput.value.trim() || 'Target Impian';
+
+        // Update Slider Labels
+        labelTargetAmount.textContent = formatRp(targetAmount);
+        labelMonthlySaving.textContent = formatRp(monthlySaving);
+
+        let balance = 0;
+        let months = 0;
+        let chartData = [0];
+        let chartLabels = ['Mulai'];
+
+        // Max limit of 120 months (10 years)
+        while (balance < targetAmount && months < 120) {
+            months++;
+            balance += monthlySaving;
+            chartData.push(balance);
+            chartLabels.push('Bln ' + months);
+        }
+
+        // Calculate Target Date
+        const today = new Date();
+        today.setMonth(today.getMonth() + months);
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const targetMonthYear = monthNames[today.getMonth()] + ' ' + today.getFullYear();
+
+        // Update Result Texts
+        resultDuration.textContent = months >= 120 ? 'Lebih dari 10 Tahun' : months + ' Bulan';
+        resultTargetDate.textContent = months >= 120 ? 'Sangat lama' : targetMonthYear;
+
+        // Recommendation text
+        let recText = `Dengan menyisihkan ${formatRp(monthlySaving)} per bulan secara konsisten, Anda membutuhkan waktu ${months} bulan untuk mengumpulkan dana target "${goalName}" senilai ${formatRp(targetAmount)}.`;
+        recommendationMessage.textContent = recText;
+
+        // Render / Update Chart
+        if (ctxSim) {
+            if (simChartInstance) {
+                simChartInstance.destroy();
+            }
+
+            simChartInstance = new Chart(ctxSim, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Proyeksi Saldo Terkumpul',
+                            data: chartData,
+                            borderColor: '#4a40c1', // primary
+                            backgroundColor: 'rgba(74, 64, 193, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0, // Straight linear line
+                            pointRadius: months > 24 ? 0 : 3
+                        },
+                        {
+                            label: 'Garis Target',
+                            data: Array(chartLabels.length).fill(targetAmount),
+                            borderColor: '#ba1a1a', // error/red line
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.dataset.label + ': ' + formatRp(context.parsed.y); }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return 'Rp ' + (value/1000) + 'k'; } }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    if (simTargetAmountInput) {
+        simTargetAmountInput.addEventListener('input', runSimulation);
+        simMonthlySavingInput.addEventListener('input', runSimulation);
+        simGoalNameInput.addEventListener('input', runSimulation);
+
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                presetButtons.forEach(b => b.classList.remove('bg-primary', 'text-white'));
+                this.classList.add('bg-primary', 'text-white');
+
+                const amount = this.dataset.amount;
+                const name = this.dataset.name;
+
+                simTargetAmountInput.value = amount;
+                simGoalNameInput.value = name;
+
+                runSimulation();
+            });
+        });
+
+        // Initialize Simulation on Load
+        runSimulation();
+    }
 });
 </script>
 @endsection

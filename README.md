@@ -18,12 +18,16 @@ Designed with modern UI/UX paradigms—featuring dark glassmorphism, dynamic AJA
 
 ## Key Features
 
-- **Dynamic Dashboard**: Surfacing total balance, real-time monthly income, and daily expenses with rich formatting.
-- **AJAX-based Fast Filtering**: Swap recent transaction lists dynamically (by *Day, Week, Month, Year, All*) using standard JavaScript Fetch API without page reloads.
+- **Dynamic Dashboard**: Displays total balance, real-time monthly income, and daily expenses with professional currency formatting.
+- **AJAX-based Fast Filtering**: Swap recent transaction lists dynamically (by Day, Week, Month, Year, All) using standard JavaScript Fetch API without page reloads.
 - **Wallet Management**: Complete CRUD operations for multiple wallets (Cash, Bank Accounts, E-Wallets) featuring live CSS previews of cards.
-- **Bills Management**: Track premium utility bills, select dynamic payment wallets, validate balances, and log history.
-- **Smart Wishlists**: View financial goal progress, saving tracking, and modern checkouts.
-- **Advanced Analytics**: Clear category-wise visual breakdowns of user expenditure.
+- **Bills Management**: Track utility bills, select dynamic payment wallets, validate balances, and log payment history.
+- **Smart Wishlists**: View financial goal progress, savings tracking, and modern checkout capabilities.
+- **Advanced Analytics**: Detailed category-wise visual breakdowns of user expenditure.
+- **Interactive AI Assistant**: Real-time financial consultation integrated with the Gemini API to analyze spending, plan savings, and get custom financial advice.
+- **PDF Financial Report Export**: Instant client-side PDF export of transaction logs containing active period summaries (Total Income, Total Expense, Net Period Change, and Current Account Balance) formatted with the official branding.
+- **Financial Goal Sandbox Simulator**: Interactive savings planner featuring linear projections visualized using Chart.js.
+- **Real-Time Bill Notifications**: Automated AJAX polling system in the navigation bar with glassmorphism Toast popups and custom audio chimes using the Web Audio API to remind users of upcoming bill due dates.
 - **Secure Client Portal**: Custom register/login panels with seamless session state persistence.
 
 ---
@@ -35,7 +39,7 @@ Designed with modern UI/UX paradigms—featuring dark glassmorphism, dynamic AJA
 | **Framework** | Laravel | `^12.0` |
 | **Asset Bundler** | Vite | `^7.0.7` |
 | **Styling** | TailwindCSS & Vanilla CSS | `^4.0.0` |
-| **Scripting** | JavaScript (ES6+ / Fetch API) | Native |
+| **Scripting** | JavaScript (ES6+ / Fetch API / Chart.js) | Native / CDN |
 | **Icons** | Bootstrap Icons | CDN |
 
 ---
@@ -48,7 +52,7 @@ Here are the key frontend files and directories to assist in development:
 Frontend-Web/
 ├── app/
 │   └── Http/
-│       └── Controllers/      # Handles API communication & page rendering
+│       └── Controllers/      # Handles API communication, Gemini API integration, and rendering
 ├── config/                   # Application configs
 ├── public/
 │   └── assets/               # Custom assets (CSS styles, JS modules, images)
@@ -57,8 +61,8 @@ Frontend-Web/
 │   ├── js/                   # Entry JS files compiled by Vite
 │   └── views/                # Blade Templates (The User Interface)
 │       ├── auth/             # Login & Register views
-│       ├── layouts/          # Base App Shell layout
-│       └── *.blade.php       # Dashboard, Wallets, Bills, Wishlist views
+│       ├── layouts/          # Base App Shell layout (includes real-time notification polling)
+│       └── *.blade.php       # Dashboard, Wallets, Bills, Wishlist, Analytics, History, AI Chat views
 ├── routes/
 │   └── web.php               # Frontend routing endpoints
 ├── vite.config.js            # Vite configuration for asset optimization
@@ -83,7 +87,7 @@ Ensure you have the following installed on your machine:
 Follow these simple instructions to set up the frontend project locally:
 
 ### 1. Navigasi ke Folder Frontend
-Buka terminal Anda dan masuk ke direktori frontend:
+Buka terminal Anda dan masuk di direktori frontend:
 ```bash
 cd "Frontend-Web"
 ```
