@@ -42,7 +42,13 @@ class WishlistController extends Controller
 
     public function update(Request $request, $id)
     {
-        $response = ApiHelper::call('put', "wishlists/{$id}", $request->all());
+        $data = $request->all();
+
+        if (isset($data['target_amount'])) {
+            $data['target_amount'] = (float) preg_replace('/[^0-9]/', '', $data['target_amount']);
+        }
+
+        $response = ApiHelper::call('put', "wishlists/{$id}", $data);
 
         if ($response->successful()) {
             return redirect()->route('wishlist')->with('success', 'Status wishlist diperbarui!');
@@ -65,8 +71,9 @@ class WishlistController extends Controller
 
     public function pay(Request $request, $id)
     {
-        $response = ApiHelper::call('post', "wishlists/{$id}/pay", [
+        $response = ApiHelper::call('put', "wishlists/{$id}", [
             'wallet_id' => $request->wallet_id,
+            'status'    => 'terbeli',
         ]);
 
         if ($response->successful()) {

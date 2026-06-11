@@ -10,7 +10,8 @@ class BillController extends Controller
     public function index()
     {
         $billsResponse = ApiHelper::call('get', 'bills');
-        $bills = $billsResponse->successful() ? $billsResponse->json() : [];
+        $billsData = $billsResponse->successful() ? $billsResponse->json() : [];
+        $bills = $billsData['data'] ?? $billsData;
 
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json($bills);
@@ -54,10 +55,14 @@ class BillController extends Controller
         return back()->withErrors($errors)->withInput();
     }
 
-    // Proses pembayaran tagihan menggunakan dompet pilihan
+    // Proses pembayaran tagihan dengan mengupdate status ke 'paid'
     public function pay(Request $request, $id)
     {
-        $response = ApiHelper::call('post', "bills/{$id}/pay", $request->all());
+        // Backend API expects status in update, so add status='paid' to request
+        $data = $request->all();
+        $data['status'] = 'paid';
+        
+        $response = ApiHelper::call('put', "bills/{$id}", $data);
 
         if ($response->successful()) {
             return redirect()->route('bills')->with('success', 'Tagihan berhasil dibayar dan masuk riwayat!');

@@ -231,7 +231,7 @@
         <div class="tab-pane fade show active" id="aktif" role="tabpanel">
             <div class="wishlist-container">
                 @forelse($activeWishlists as $item)
-                <div class="wishlist-item">
+                <div class="wishlist-item" onclick='openEditModal(@json($item))' style="cursor: pointer;">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-box" style="width: 45px; height: 45px; background: #F3F0FF; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary-purple);">
                             <i class="bi bi-star-fill fs-5"></i>
@@ -245,11 +245,11 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn-pay" onclick="openPayModal({{ $item['id'] }}, '{{ $item['name'] }}', {{ $item['target_amount'] ?? 0 }})">
+                        <button type="button" class="btn-pay" onclick="event.stopPropagation(); openPayModal({{ $item['id'] }}, '{{ $item['name'] }}', {{ $item['target_amount'] ?? 0 }})">
                             <i class="bi bi-wallet2"></i> Beli
                         </button>
                         <button type="button" class="btn btn-light rounded-pill p-2 px-3" 
-                                onclick="confirmDelete({{ $item['id'] }}, '{{ $item['name'] }}')">
+                                onclick="event.stopPropagation(); confirmDelete({{ $item['id'] }}, '{{ $item['name'] }}')">
                             <i class="bi bi-trash text-danger"></i>
                         </button>
                     </div>
@@ -341,6 +341,39 @@
     </div>
 </div>
 
+{{-- Edit Wishlist Modal --}}
+<div class="modal fade" id="editWishlistModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content premium-modal-content">
+            <div class="modal-header p-4 pb-2 border-0">
+                <h5 class="fw-bold mb-0">Edit Wishlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editWishlistForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Nama Barang / Impian</label>
+                        <input type="text" name="name" id="editWishlistName" class="form-control form-control-lg border-0 bg-light rounded-4" placeholder="Misal: iPhone 15, Liburan ke Bali..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Target Dana (Rp)</label>
+                        <input type="text" inputmode="numeric" name="target_amount" id="editWishlistAmount" class="form-control form-control-lg border-0 bg-light rounded-4" placeholder="Misal: 15000000" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" id="editWishlistNotes" class="form-control border-0 bg-light rounded-4" rows="2" placeholder="Warna hitam, beli di iBox..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-4 shadow-sm" style="background: var(--primary-purple); border:none;">
+                        Simpan Perubahan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Delete Confirmation Modal --}}
 <div class="modal fade" id="deleteWishlistModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -382,7 +415,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">Target Dana (Rp)</label>
-                        <input type="number" name="target_amount" class="form-control form-control-lg border-0 bg-light rounded-4" placeholder="Misal: 15000000" min="0" required>
+                        <input type="text" inputmode="numeric" name="target_amount" class="form-control form-control-lg border-0 bg-light rounded-4" placeholder="Misal: 15000000" required>
                     </div>
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted">Catatan Tambahan (Opsional)</label>
@@ -411,6 +444,22 @@ function openPayModal(id, name, amount) {
     document.getElementById('payWishlistAmount').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(amount);
     document.getElementById('payWishlistForm').action = `/wishlist/${id}/pay`;
     const modal = new bootstrap.Modal(document.getElementById('payWishlistModal'));
+    modal.show();
+}
+
+function formatRupiahValue(value) {
+    if (value === null || value === undefined) return '';
+    const digits = String(value).replace(/[^0-9]/g, '');
+    return digits ? new Intl.NumberFormat('id-ID').format(Number(digits)).replace(/,/g, '.') : '';
+}
+
+function openEditModal(item) {
+    document.getElementById('editWishlistForm').action = `/wishlist/${item.id}`;
+    document.getElementById('editWishlistName').value = item.name || '';
+    document.getElementById('editWishlistAmount').value = formatRupiahValue(item.target_amount);
+    document.getElementById('editWishlistNotes').value = item.notes || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('editWishlistModal'));
     modal.show();
 }
 

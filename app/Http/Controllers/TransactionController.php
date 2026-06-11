@@ -57,7 +57,17 @@ class TransactionController extends Controller
         if ($request->has('type') && !isset($data['category'])) {
             $data['category'] = $request->type;
         }
-        $data['category'] = $data['category'] ?? 'cash'; 
+        
+        // Default to 'Cash' and ensure category is in backend enum format
+        if (!isset($data['category']) || empty($data['category'])) {
+            $data['category'] = 'Cash';
+        } else {
+            // Normalize category to backend enum format
+            $category = $data['category'];
+            if ($category === 'cash') $data['category'] = 'Cash';
+            elseif ($category === 'bank') $data['category'] = 'Bank Account';
+            elseif ($category === 'e-wallet' || $category === 'e_wallet') $data['category'] = 'E-Wallet';
+        }
 
         // Bersihkan titik ribuan dari balance jika ada
         if (isset($data['balance']) && is_string($data['balance'])) {

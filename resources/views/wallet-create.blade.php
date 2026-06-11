@@ -279,9 +279,9 @@
                             <div class="locked-badge"><i class="bi bi-lock-fill me-1"></i> Auto-selected</div>
                         @endif
                         <select name="category" id="inputCategory" class="premium-input premium-select" {{ isset($defaultType) ? 'disabled' : '' }}>
-                            <option value="cash" {{ (old('category', $defaultType ?? 'cash') == 'cash') ? 'selected' : '' }}>Cash / Physical Money</option>
-                            <option value="bank" {{ (old('category', $defaultType ?? 'cash') == 'bank') ? 'selected' : '' }}>Bank Account / Savings</option>
-                            <option value="e-wallet" {{ (old('category', $defaultType ?? 'cash') == 'e-wallet') ? 'selected' : '' }}>Digital Wallet / E-Wallet</option>
+                            <option value="Cash" {{ (old('category', $defaultType ?? 'cash') == 'Cash' || $defaultType == 'cash') ? 'selected' : '' }}>Cash</option>
+                            <option value="Bank Account" {{ (old('category', $defaultType ?? 'cash') == 'Bank Account' || $defaultType == 'bank') ? 'selected' : '' }}>Bank Account</option>
+                            <option value="E-Wallet" {{ (old('category', $defaultType ?? 'cash') == 'E-Wallet' || $defaultType == 'e-wallet') ? 'selected' : '' }}>E-Wallet</option>
                         </select>
                         <i class="bi bi-chevron-down select-arrow"></i>
                         @if(isset($defaultType))
@@ -335,7 +335,7 @@
     const cardPreview = document.getElementById('cardPreview');
 
     const configMap = {
-        'cash':     { label: 'Cash Wallet',    icon: 'bi-cash-stack',    default: 'My Cash',     grad: 'linear-gradient(135deg, #FF8C42 0%, #FF3D00 100%)' },
+        'Cash':     { label: 'Cash Wallet',    icon: 'bi-cash-stack',    default: 'My Cash',     grad: 'linear-gradient(135deg, #FF8C42 0%, #FF3D00 100%)' },
         'bank':     { label: 'Bank Account',   icon: 'bi-bank2',         default: 'Savings Account', grad: 'linear-gradient(135deg, #6A4CFF 0%, #3D2BB7 100%)' },
         'e-wallet': { label: 'Digital Wallet', icon: 'bi-phone-vibrate', default: 'E-Wallet',    grad: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)' }
     };
@@ -362,7 +362,7 @@
         if (raw) {
             let num = parseInt(raw);
             let formatted = num.toLocaleString('id-ID');
-            e.target.value = formatted;
+            e.target.value = formatted;  // Display with formatting
             viewBalance.innerText = 'Rp ' + formatted;
             // Subtle pulse effect on card
             cardPreview.style.transform = 'scale(1.02) translateY(-15px) rotateX(5deg)';
@@ -376,11 +376,6 @@
     inputCategory.addEventListener('change', updatePreview);
     updatePreview(); // Init
 
-
-    document.getElementById('premiumWalletForm').addEventListener('submit', function() {
-        // Strip dots before sending to backend
-        inputBalance.value = inputBalance.value.replace(/\./g, '');
-    });
 
     // 3D Tilt Effect
     cardPreview.addEventListener('mousemove', (e) => {

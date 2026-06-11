@@ -240,6 +240,8 @@
 
                 <form id="payBillForm" method="POST">
                     @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status" value="paid">
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted">Pilih Sumber Dana (Dompet)</label>
                         <div class="wallet-selector-list d-flex flex-column gap-2">
@@ -348,7 +350,7 @@ function openPayModal(id, name, amount) {
     document.getElementById('payBillAmount').innerText = 'Rp ' + amount.toLocaleString('id-ID').replace(/,/g, '.');
     
     const form = document.getElementById('payBillForm');
-    form.action = `/bills/${id}/pay`;
+    form.action = `/bills/${id}`;
     
     const modal = new bootstrap.Modal(document.getElementById('payBillModal'));
     modal.show();

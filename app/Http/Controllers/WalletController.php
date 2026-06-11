@@ -28,11 +28,17 @@ class WalletController extends Controller
             foreach ($wallets as $wallet) {
                 $totalBalance += (float) ($wallet['balance'] ?? 0);
                 
-                // Get category, default to 'cash' if missing or unknown
-                $category = strtolower($wallet['category'] ?? 'cash');
+                // Get category and normalize to lowercase keys for grouping
+                $rawCategory = $wallet['category'] ?? 'Cash';
                 
-                // Normalisasi tipe (misal: e_wallet -> e-wallet)
-                if ($category === 'e_wallet') $category = 'e-wallet';
+                // Map backend enum to grouping key
+                if ($rawCategory === 'Bank Account' || $rawCategory === 'bank') {
+                    $category = 'bank';
+                } elseif ($rawCategory === 'E-Wallet' || $rawCategory === 'e-wallet' || $rawCategory === 'e_wallet') {
+                    $category = 'e-wallet';
+                } else {
+                    $category = 'cash';
+                }
                 
                 if (isset($grouped[$category])) {
                     $grouped[$category][] = $wallet;
@@ -54,8 +60,14 @@ class WalletController extends Controller
      */
     public function create(Request $request)
     {
-        // Hanya set defaultType jika ada di query string, agar view tahu kapan harus me-lock pilihan
-        $defaultType = $request->query('category') ?? $request->query('type'); 
+        // Map query parameter ke enum format yang diharapkan backend
+        $typeParam = $request->query('category') ?? $request->query('type');
+        $defaultType = null;
+        
+        if ($typeParam === 'bank') $defaultType = 'Bank Account';
+        elseif ($typeParam === 'e-wallet' || $typeParam === 'e_wallet') $defaultType = 'E-Wallet';
+        elseif ($typeParam === 'cash') $defaultType = 'Cash';
+        else $defaultType = $typeParam; // use as-is if already in correct format 
         
         $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
         $user = $summaryResponse->successful() ? ($summaryResponse->json()['user'] ?? null) : null;
@@ -73,6 +85,19 @@ class WalletController extends Controller
         // Jika form mengirim 'type', map ke 'category'
         if ($request->has('type') && !isset($data['category'])) {
             $data['category'] = $request->type;
+        }
+        
+        // Pastikan category sudah dalam format enum yang benar
+        if (isset($data['category'])) {
+            $category = $data['category'];
+            if ($category === 'cash') $data['category'] = 'Cash';
+            elseif ($category === 'bank') $data['category'] = 'Bank Account';
+            elseif ($category === 'e-wallet' || $category === 'e_wallet') $data['category'] = 'E-Wallet';
+        }
+
+        // Bersihkan titik ribuan dari balance jika ada (format Indonesia: 10.000 -> 10000)
+        if (isset($data['balance']) && is_string($data['balance'])) {
+            $data['balance'] = str_replace('.', '', $data['balance']);
         }
 
         $response = ApiHelper::call('post', 'wallets', $data);
