@@ -187,7 +187,6 @@
                                 <option value="Gift">Gift</option>
                             </optgroup>
                             <optgroup label="Other">
-                                <option value="Transfer">Transfer</option>
                                 <option value="Other">Other</option>
                             </optgroup>
                         </select>
