@@ -129,7 +129,7 @@
           <h1 class="text-[32px] leading-[40px] font-bold font-headline-md text-on-surface">Analytics Dashboard</h1>
           <p class="text-[16px] leading-[24px] text-on-surface-variant mt-1">Your financial performance overview</p>
         </div>
-        <div class="hidden md:flex gap-4">
+        <div class="flex flex-wrap gap-2 md:flex-row items-center w-full md:w-auto mt-2 md:mt-0">
             @php
               // Support both analytics 'trend' and history 'period' to keep filters in sync
               $period = request('period', null);
@@ -142,6 +142,7 @@
 
               $selectedMonth = request('month', date('n'));
               $selectedYear = request('year', date('Y'));
+              $selectedWeek = request('week', (int)min(5, ceil((int)date('j') / 7)));
               $months = [
                 1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
                 5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
@@ -152,7 +153,7 @@
               $endYear = (int)date('Y') + 1;
               $years = range($startYear, $endYear);
             @endphp
-          <form action="{{ route('analytic') }}" method="GET" class="flex gap-2 items-center" onsubmit="
+          <form action="{{ route('analytic') }}" method="GET" class="flex flex-wrap gap-2 items-center" onsubmit="
               if(this.trend.value === 'yearly') { 
                   if(this.month) this.month.disabled = true; 
                   if(this.week) this.week.disabled = true; 
@@ -177,7 +178,7 @@
              @if($selectedTrend === 'weekly')
              <select name="week" onchange="this.form.submit()" class="px-6 py-2 rounded-full border border-outline-variant text-[12px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors bg-transparent appearance-none cursor-pointer">
                  @for($w = 1; $w <= 5; $w++)
-                     <option value="{{ $w }}" {{ request('week', 1) == $w ? 'selected' : '' }}>Week {{ $w }}</option>
+                     <option value="{{ $w }}" {{ $selectedWeek == $w ? 'selected' : '' }}>Week {{ $w }}</option>
                  @endfor
              </select>
              @endif
@@ -494,8 +495,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnIncome = document.getElementById('btnToggleIncome');
 
     let donutChartInstance = null;
-    const colors = ['#4a40c1', '#5f5c73', '#777585', '#ba1a1a', '#535557'];
-    const bgClasses = ['bg-primary', 'bg-secondary', 'bg-outline-variant', 'bg-error', 'bg-tertiary'];
+    
+    // Warna statis yang konsisten berdasarkan kategori
+    const categoryColorMap = {
+        'Food & Drink': { color: '#F59E0B', bgClass: 'bg-amber-500' },
+        'Transportation': { color: '#06B6D4', bgClass: 'bg-cyan-500' },
+        'Entertainment': { color: '#EC4899', bgClass: 'bg-pink-500' },
+        'Shopping': { color: '#8B5CF6', bgClass: 'bg-purple-500' },
+        'Bills': { color: '#EF4444', bgClass: 'bg-red-500' },
+        'Health': { color: '#10B981', bgClass: 'bg-green-500' },
+        'Education': { color: '#3B82F6', bgClass: 'bg-blue-500' },
+        'Salary': { color: '#4a40c1', bgClass: 'bg-primary' },
+        'Freelance': { color: '#5f5c73', bgClass: 'bg-secondary' },
+        'Business': { color: '#777585', bgClass: 'bg-outline-variant' },
+        'Investment': { color: '#535557', bgClass: 'bg-tertiary' },
+        'Gift': { color: '#ba1a1a', bgClass: 'bg-error' },
+        'Other': { color: '#6B7280', bgClass: 'bg-gray-500' },
+        'More': { color: '#4B5563', bgClass: 'bg-gray-600' }
+    };
+
+    // Warna default cadangan jika ada kategori baru yang tidak terdaftar
+    const defaultColors = ['#4a40c1', '#5f5c73', '#777585', '#ba1a1a', '#535557'];
+    const defaultBgClasses = ['bg-primary', 'bg-secondary', 'bg-outline-variant', 'bg-error', 'bg-tertiary'];
 
     function renderCategory(type) {
         // Switch Active Button Style
@@ -528,29 +549,40 @@ document.addEventListener('DOMContentLoaded', function() {
             donutChartInstance.destroy();
         }
         
-        if (labels.length > 0) {
-            donutChartInstance = new Chart(ctxDonut, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataVals,
-                        backgroundColor: colors,
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: function(context) { return context.label + ': ' + formatRp(context.parsed); } } }
+        const chartLabelsData = labels.length > 0 ? labels : ['No Data'];
+        const chartValsData = labels.length > 0 ? dataVals : [1];
+        const chartColors = labels.length > 0 ? labels.map((label, idx) => {
+            return categoryColorMap[label]?.color ?? defaultColors[idx % defaultColors.length];
+        }) : ['#eae6f2'];
+
+        donutChartInstance = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: chartLabelsData,
+                datasets: [{
+                    data: chartValsData,
+                    backgroundColor: chartColors,
+                    borderWidth: 0,
+                    hoverOffset: labels.length > 0 ? 4 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: labels.length > 0,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + formatRp(context.parsed);
+                            }
+                        }
                     }
                 }
-            });
-        }
+            }
+        });
 
         // Update List
         categoryListContainer.innerHTML = '';
@@ -559,7 +591,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             categoryListContainer.innerHTML = '';
             dataArr.forEach((item, index) => {
-                const colorClass = bgClasses[index % bgClasses.length];
+                const colorConfig = categoryColorMap[item.category_name] ?? {
+                    color: defaultColors[index % defaultColors.length],
+                    bgClass: defaultBgClasses[index % defaultBgClasses.length]
+                };
+                const colorClass = colorConfig.bgClass;
                 const amtLabel = formatRp(item.total_amount);
                 categoryListContainer.innerHTML += `
                 <div class="flex justify-between items-center">

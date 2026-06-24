@@ -14,7 +14,10 @@ class AnalyticController extends Controller
         $trend = $request->query('trend', 'weekly');
         $month = $request->query('month', date('n'));
         $year = $request->query('year', date('Y'));
-        $week = $request->query('week', 1);
+        
+        $currentDay = (int) date('j');
+        $defaultWeek = (int) min(5, ceil($currentDay / 7));
+        $week = $request->query('week', $defaultWeek);
 
         // Map history's period values to analytics' trend values
         if ($period) {
@@ -51,7 +54,7 @@ class AnalyticController extends Controller
         $summary = $summaryResponse->successful() ? $summaryResponse->json() : [];
 
         // Ambil data top pengeluaran dan pemasukan per kategori dari backend
-        $expensesResponse = ApiHelper::call('get', 'analytics/top-expenses', $params);
+        $expensesResponse = ApiHelper::call('get', 'analytics/top-categories', $params);
         $categoriesData = $expensesResponse->successful() ? $expensesResponse->json() : ['expenses' => [], 'incomes' => []];
 
         $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
@@ -68,5 +71,37 @@ class AnalyticController extends Controller
             'topIncomes'   => $categoriesData['incomes'] ?? [],
             'user'         => $user,
         ]);
+    }
+
+    public function getSummary(Request $request)
+    {
+        $currentDay = (int) date('j');
+        $defaultWeek = (int) min(5, ceil($currentDay / 7));
+
+        $params = [
+            'trend'  => $request->query('trend', 'weekly'),
+            'month'  => $request->query('month', date('n')),
+            'year'   => $request->query('year', date('Y')),
+            'week'   => $request->query('week', $defaultWeek),
+            'period' => $request->query('period'),
+        ];
+        $response = ApiHelper::call('get', 'analytics/summary', $params);
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function getTopExpenses(Request $request)
+    {
+        $currentDay = (int) date('j');
+        $defaultWeek = (int) min(5, ceil($currentDay / 7));
+
+        $params = [
+            'trend'  => $request->query('trend', 'weekly'),
+            'month'  => $request->query('month', date('n')),
+            'year'   => $request->query('year', date('Y')),
+            'week'   => $request->query('week', $defaultWeek),
+            'period' => $request->query('period'),
+        ];
+        $response = ApiHelper::call('get', 'analytics/top-categories', $params);
+        return response()->json($response->json(), $response->status());
     }
 }

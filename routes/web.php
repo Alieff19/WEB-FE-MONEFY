@@ -29,6 +29,8 @@ Route::middleware(['checkApi'])->group(function () {
     // Semua fitur di bawah ini harus login dulu
     Route::get('/history',  [HistoryController::class,  'index'])->name('history');
     Route::get('/analytic', [AnalyticController::class, 'index'])->name('analytic');
+    Route::get('/analytics/summary', [AnalyticController::class, 'getSummary'])->name('analytics.summary');
+    Route::get('/analytics/top-expenses', [AnalyticController::class, 'getTopExpenses'])->name('analytics.top-expenses');
     Route::get('/profile',  [ProfileController::class,  'index'])->name('profile');
     Route::post('/profile/upload', [ProfileController::class, 'uploadAvatar'])->name('profile.upload');
     Route::get('/help',     [HelpController::class,     'index'])->name('help');
