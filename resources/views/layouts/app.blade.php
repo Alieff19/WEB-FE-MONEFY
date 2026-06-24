@@ -77,7 +77,10 @@
                             $finalAvatar = null;
                             if ($rawAvatar) {
                                 if (str_starts_with($rawAvatar, 'http')) {
-                                    $finalAvatar = $rawAvatar;
+                                    if (str_contains($rawAvatar, '/storage/v1/s3/')) {
+                                        $rawAvatar = str_replace('/storage/v1/s3/', '/storage/v1/object/public/', $rawAvatar);
+                                    }
+                                    $finalAvatar = $rawAvatar . (str_contains($rawAvatar, '?') ? '&' : '?') . 'v=' . time();
                                 } else {
                                     $fullApiUrl = config('services.monefy_backend.base_url');
                                     $urlParts = parse_url($fullApiUrl);
