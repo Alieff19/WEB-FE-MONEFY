@@ -130,20 +130,28 @@
           <p class="text-[16px] leading-[24px] text-on-surface-variant mt-1">Your financial performance overview</p>
         </div>
         <div class="hidden md:flex gap-4">
-          @php
+            @php
+              // Support both analytics 'trend' and history 'period' to keep filters in sync
+              $period = request('period', null);
               $selectedTrend = request('trend', 'weekly');
+              if ($period) {
+                if ($period === 'day' || $period === 'week') $selectedTrend = 'weekly';
+                if ($period === 'month') $selectedTrend = 'monthly';
+                if ($period === 'year' || $period === 'all') $selectedTrend = 'yearly';
+              }
+
               $selectedMonth = request('month', date('n'));
               $selectedYear = request('year', date('Y'));
               $months = [
-                  1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-                  5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-                  9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+                1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
               ];
               // From a bit in the past up to 1 year ahead
               $startYear = 2020;
               $endYear = (int)date('Y') + 1;
               $years = range($startYear, $endYear);
-          @endphp
+            @endphp
           <form action="{{ route('analytic') }}" method="GET" class="flex gap-2 items-center" onsubmit="
               if(this.trend.value === 'yearly') { 
                   if(this.month) this.month.disabled = true; 
@@ -192,7 +200,7 @@
                   </div>
                   <span class="text-[14px] font-bold text-on-surface-variant">Total Income</span>
               </div>
-              <h3 class="text-[24px] font-bold text-green-600">Rp {{ number_format((float)($totalIncome ?? 0), 0, ',', '.') }}</h3>
+              <h3 id="totalIncomeValue" class="text-[24px] font-bold text-green-600">Rp {{ number_format((float)($totalIncome ?? 0), 0, ',', '.') }}</h3>
           </div>
           <div class="bg-white rounded-xl p-6 shadow-sm border border-surface-container">
               <div class="flex items-center gap-3 mb-3">
@@ -201,7 +209,7 @@
                   </div>
                   <span class="text-[14px] font-bold text-on-surface-variant">Total Expense</span>
               </div>
-              <h3 class="text-[24px] font-bold text-red-600">Rp {{ number_format((float)($totalExpense ?? 0), 0, ',', '.') }}</h3>
+              <h3 id="totalExpenseValue" class="text-[24px] font-bold text-red-600">Rp {{ number_format((float)($totalExpense ?? 0), 0, ',', '.') }}</h3>
           </div>
           <div class="bg-primary rounded-xl p-6 shadow-md text-white">
               <div class="flex items-center gap-3 mb-3">
@@ -210,7 +218,7 @@
                   </div>
                   <span class="text-[14px] font-bold text-primary-fixed">Net Balance</span>
               </div>
-              <h3 class="text-[24px] font-bold">Rp {{ number_format((float)($totalBalance ?? 0), 0, ',', '.') }}</h3>
+              <h3 id="totalBalanceValue" class="text-[24px] font-bold">Rp {{ number_format((float)($totalBalance ?? 0), 0, ',', '.') }}</h3>
           </div>
       </div>
 
@@ -387,8 +395,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 1. Monthly Trend Chart (Line)
     const ctxTrend = document.getElementById('monthlyTrendChart');
+    let trendChartInstance = null;
     if (ctxTrend) {
-        new Chart(ctxTrend, {
+        trendChartInstance = new Chart(ctxTrend, {
             type: 'line',
             data: {
                 labels: chartLabels,
@@ -434,8 +443,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. Period Comparison Chart (Bar)
     const ctxBar = document.getElementById('periodComparisonChart');
+    let comparisonChartInstance = null;
     if (ctxBar) {
-        new Chart(ctxBar, {
+        comparisonChartInstance = new Chart(ctxBar, {
             type: 'bar',
             data: {
                 labels: chartLabels,
@@ -497,9 +507,18 @@ document.addEventListener('DOMContentLoaded', function() {
             btnExpense.className = "flex-1 py-2 text-[14px] font-bold rounded-md transition-colors text-on-surface-variant hover:text-primary";
         }
 
-        const dataArr = type === 'expense' ? topExpenses : topIncomes;
-        const totalAmt = type === 'expense' ? totalExpenseAmount : totalIncomeAmount;
+        const rawArr = type === 'expense' ? topExpenses : topIncomes;
+        const totalAmt = Number(type === 'expense' ? totalExpenseAmount : totalIncomeAmount) || 0;
         donutTotalAmount.textContent = formatRp(totalAmt);
+
+        // Normalize items and compute percentage if missing
+        const dataArr = (rawArr || []).map(item => {
+          // support both array/object forms
+          const category_name = item.category_name ?? item.category ?? item.name ?? '';
+          const total_amount = Number(item.total_amount ?? item.amount ?? item.value ?? 0) || 0;
+          const percentage = item.percentage ?? (totalAmt > 0 ? Math.round((total_amount / totalAmt) * 100) : 0);
+          return { category_name, total_amount, percentage };
+        }).filter(i => i.total_amount > 0);
 
         const labels = dataArr.map(e => e.category_name);
         const dataVals = dataArr.map(e => e.total_amount);
@@ -538,13 +557,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dataArr.length === 0) {
             categoryListContainer.innerHTML = `<div class="text-center text-on-surface-variant text-[14px] mt-4">No ${type}s found</div>`;
         } else {
+            categoryListContainer.innerHTML = '';
             dataArr.forEach((item, index) => {
                 const colorClass = bgClasses[index % bgClasses.length];
+                const amtLabel = formatRp(item.total_amount);
                 categoryListContainer.innerHTML += `
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full ${colorClass}"></div>
-                    <span class="text-[14px] text-on-surface">${item.category_name}</span>
+                    <div class="flex flex-col">
+                      <span class="text-[14px] text-on-surface">${item.category_name}</span>
+                      <small class="text-[12px] text-on-surface-variant">${amtLabel}</small>
+                    </div>
                   </div>
                   <span class="text-[14px] font-bold">${item.percentage}%</span>
                 </div>`;
@@ -555,6 +579,71 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event Listeners for Toggles
     btnExpense.addEventListener('click', () => renderCategory('expense'));
     btnIncome.addEventListener('click', () => renderCategory('income'));
+
+    // Refresh analytics via API when transactions change in another tab or on the same page
+    async function refreshAnalytics() {
+        const params = new URLSearchParams(window.location.search);
+        const summaryUrl = '/analytics/summary?' + params.toString();
+        const categoriesUrl = '/analytics/top-expenses?' + params.toString();
+
+        try {
+            const [summaryRes, categoriesRes] = await Promise.all([
+                fetch(summaryUrl, { headers: { 'Accept': 'application/json' } }),
+                fetch(categoriesUrl, { headers: { 'Accept': 'application/json' } })
+            ]);
+
+            if (!summaryRes.ok || !categoriesRes.ok) {
+                console.warn('Analytics refresh failed', summaryRes.status, categoriesRes.status);
+                return;
+            }
+
+            const summaryData = await summaryRes.json();
+            const categoryData = await categoriesRes.json();
+
+            // Update summary cards
+            const incomeText = formatRp(summaryData.total_income ?? 0);
+            const expenseText = formatRp(summaryData.total_expense ?? 0);
+            const balanceText = formatRp(summaryData.total_balance ?? 0);
+            document.getElementById('totalIncomeValue').textContent = incomeText;
+            document.getElementById('totalExpenseValue').textContent = expenseText;
+            document.getElementById('totalBalanceValue').textContent = balanceText;
+
+            const newLabels = summaryData.chart_labels || [];
+            const newIncome = summaryData.chart_income || [];
+            const newExpense = summaryData.chart_expense || [];
+
+            if (trendChartInstance) {
+                trendChartInstance.data.labels = newLabels;
+                trendChartInstance.data.datasets[0].data = newIncome;
+                trendChartInstance.data.datasets[1].data = newExpense;
+                trendChartInstance.update();
+            }
+            if (comparisonChartInstance) {
+                comparisonChartInstance.data.labels = newLabels;
+                comparisonChartInstance.data.datasets[0].data = newIncome;
+                comparisonChartInstance.data.datasets[1].data = newExpense;
+                comparisonChartInstance.update();
+            }
+
+            // Update category section data sources and re-render
+            topExpenses.length = 0;
+            topIncomes.length = 0;
+            (categoryData.expenses || []).forEach(item => topExpenses.push(item));
+            (categoryData.incomes || []).forEach(item => topIncomes.push(item));
+
+            const activeType = btnExpense.classList.contains('bg-white') ? 'expense' : 'income';
+            renderCategory(activeType);
+        } catch (error) {
+            console.error('Failed refresh analytics', error);
+        }
+    }
+
+    window.addEventListener('transaction:updated', refreshAnalytics);
+    window.addEventListener('storage', function(event) {
+        if (event.key === 'transaction_updated_at') {
+            refreshAnalytics();
+        }
+    });
 
     // Initial render
     renderCategory('expense');

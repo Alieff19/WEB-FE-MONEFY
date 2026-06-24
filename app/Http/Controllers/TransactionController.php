@@ -47,6 +47,45 @@ class TransactionController extends Controller
     }
 
     /**
+     * Update transaction via backend API.
+     */
+    public function update(Request $request, $id)
+    {
+        $data = $request->all();
+
+        $response = ApiHelper::call('put', "transactions/{$id}", $data);
+
+        if ($response->successful()) {
+            return response()->json([
+                'message' => 'Transaksi berhasil diperbarui!',
+                'data'    => $response->json()['data'] ?? []
+            ], 200);
+        }
+
+        $error = $response->json();
+        return response()->json([
+            'message' => $error['message'] ?? 'Gagal memperbarui transaksi.'
+        ], $response->status());
+    }
+
+    /**
+     * Delete transaction via backend API.
+     */
+    public function destroy($id)
+    {
+        $response = ApiHelper::call('delete', "transactions/{$id}");
+
+        if ($response->successful()) {
+            return response()->json(['message' => 'Transaksi berhasil dihapus!'], 200);
+        }
+
+        $error = $response->json();
+        return response()->json([
+            'message' => $error['message'] ?? 'Gagal menghapus transaksi.'
+        ], $response->status());
+    }
+
+    /**
      * Simpan wallet baru — kirim data ke backend via ApiHelper.
      */
     public function storeWallet(Request $request)

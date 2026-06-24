@@ -48,9 +48,11 @@ Route::middleware(['checkApi'])->group(function () {
     Route::delete('/wishlist/{id}',  [WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
     // Transactions & Wallets (AJAX endpoints — dipakai oleh Add Transaction modal)
-    Route::post('/transactions',  [TransactionController::class, 'store'])->name('transaction.store');
-    Route::post('/wallets',       [TransactionController::class, 'storeWallet'])->name('wallet.store');
-    Route::get('/api/wallets',    [TransactionController::class, 'wallets'])->name('wallet.list');
+    Route::post('/transactions',   [TransactionController::class, 'store'])->name('transaction.store');
+    Route::put('/transactions/{id}', [TransactionController::class, 'update'])->name('transaction.update');
+    Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transaction.destroy');
+    Route::post('/wallets',        [TransactionController::class, 'storeWallet'])->name('wallet.store');
+    Route::get('/api/wallets',     [TransactionController::class, 'wallets'])->name('wallet.list');
 
     // Wallet Pages (halaman dedicated seperti mobile)
     Route::get('/wallet',            [WalletController::class, 'index'])->name('wallet.index');

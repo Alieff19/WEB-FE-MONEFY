@@ -66,6 +66,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     // Reset form
                     this.reset();
 
+                    // Notify analytics pages if a transaction changed
+                    if (url.includes('/transactions')) {
+                        const timestamp = Date.now().toString();
+                        try {
+                            localStorage.setItem('transaction_updated_at', timestamp);
+                        } catch (err) {
+                            console.warn('Unable to write localStorage', err);
+                        }
+                        window.dispatchEvent(new Event('transaction:updated'));
+                    }
+
                     // Jika backend kirim flag reload=true (mis. Add Wallet),
                     // atau selalu reload agar saldo/data terbaru tampil
                     if (result.reload || true) {

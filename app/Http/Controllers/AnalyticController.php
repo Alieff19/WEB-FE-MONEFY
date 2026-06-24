@@ -9,16 +9,41 @@ class AnalyticController extends Controller
 {
     public function index(Request $request)
     {
+        // Support both 'trend' (used by analytics) and 'period' (used by history)
+        $period = $request->query('period', null);
         $trend = $request->query('trend', 'weekly');
         $month = $request->query('month', date('n'));
         $year = $request->query('year', date('Y'));
         $week = $request->query('week', 1);
 
+        // Map history's period values to analytics' trend values
+        if ($period) {
+            switch ($period) {
+                case 'day':
+                    // Show daily within current week — backend may treat as weekly
+                    $trend = 'weekly';
+                    break;
+                case 'week':
+                    $trend = 'weekly';
+                    break;
+                case 'month':
+                    $trend = 'monthly';
+                    break;
+                case 'year':
+                    $trend = 'yearly';
+                    break;
+                case 'all':
+                    $trend = 'yearly';
+                    break;
+            }
+        }
+
         $params = [
-            'trend' => $trend,
-            'month' => $month,
-            'year'  => $year,
-            'week'  => $week
+            'trend'  => $trend,
+            'month'  => $month,
+            'year'   => $year,
+            'week'   => $week,
+            'period' => $period
         ];
 
         // Ambil data ringkasan keuangan dari backend

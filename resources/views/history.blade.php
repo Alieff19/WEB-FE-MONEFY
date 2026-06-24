@@ -127,8 +127,12 @@
                                     data-title="{{ $transaction['title'] }}"
                                     data-category="{{ $transaction['category'] }}"
                                     data-date="{{ \Carbon\Carbon::parse($transaction['transaction_date'])->addHours(7)->format('d M Y, H:i') }}"
+                                    data-transaction-date="{{ $transaction['transaction_date'] ?? '' }}"
                                     data-amount="Rp {{ number_format((float)($transaction['amount'] ?? 0), 0, ',', '.') }}"
+                                    data-raw-amount="{{ $transaction['amount'] ?? 0 }}"
                                     data-wallet="{{ $transaction['wallet']['name_wallet'] ?? 'No Wallet' }}"
+                                    data-wallet-id="{{ $transaction['wallet']['id'] ?? '' }}"
+                                    data-to-wallet-id="{{ $transaction['to_wallet_id'] ?? '' }}"
                                     data-note="{{ $transaction['note'] ?? '-' }}"
                                     data-id="{{ $transaction['id'] ?? '0' }}"
                                     style="cursor: pointer;">
@@ -203,8 +207,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light w-100 py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 18px; color: #64748b; background: #f1f5f9;">Close</button>
+                <div class="modal-footer border-0 p-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger flex-fill py-3 fw-bold" onclick="deleteTransaction()" style="border-radius: 18px;">Delete</button>
+                    <button type="button" class="btn btn-outline-primary flex-fill py-3 fw-bold" onclick="editTransaction()" style="border-radius: 18px;">Edit</button>
+                    <button type="button" class="btn btn-light flex-fill py-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 18px; color: #64748b; background: #f1f5f9;">Close</button>
                 </div>
             </div>
         </div>
@@ -571,8 +577,23 @@ document.addEventListener('keyup', function(e) {
     }
 });
 // Detail Modal logic
-function showDetail(row) {
+let detailTransactionData = null;
+    function showDetail(row) {
     const data = row.dataset;
+    detailTransactionData = {
+        id: data.id,
+        type: data.type,
+        title: data.title,
+        category: data.category,
+        transactionDate: data.transactionDate,
+        amount: data.amount,
+        rawAmount: data.rawAmount,
+        wallet: data.wallet,
+        walletId: data.walletId,
+        toWalletId: data.toWalletId,
+        note: data.note,
+    };
+
     const modal = new bootstrap.Modal(document.getElementById('transactionDetailModal'));
     
     document.getElementById('detailAmount').innerText = data.amount;
@@ -590,6 +611,58 @@ function showDetail(row) {
     else amountEl.style.color = '#EF4444';
 
     modal.show();
+}
+
+function editTransaction() {
+    if (!detailTransactionData) return;
+
+    const rowData = detailTransactionData;
+    const editData = {
+        id: rowData.id,
+        type: rowData.type,
+        title: rowData.title,
+        category: rowData.category,
+        transactionDate: rowData.transactionDate,
+        amount: rowData.rawAmount || rowData.amount.replace(/[^0-9]/g, ''),
+        walletId: rowData.walletId,
+        toWalletId: rowData.toWalletId,
+        note: rowData.note === '-' ? '' : rowData.note,
+    };
+
+    if (typeof openEditTransactionModal === 'function') {
+        openEditTransactionModal(editData);
+    } else {
+        alert('Edit modal belum siap.');
+    }
+}
+
+async function deleteTransaction() {
+    if (!detailTransactionData) return;
+
+    const confirmed = confirm('Apakah Anda yakin ingin menghapus transaksi ini?');
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(`/transactions/${detailTransactionData.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || ''
+            }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message || 'Transaksi berhasil dihapus.');
+            window.location.reload();
+        } else {
+            alert(result.message || 'Gagal menghapus transaksi.');
+        }
+    } catch (error) {
+        console.error('Delete transaction error:', error);
+        alert('Gagal terhubung ke server.');
+    }
 }
 </script>
 @endpush

@@ -12,9 +12,8 @@ class HistoryController extends Controller
         $period = $request->query('period', 'day');
 
         // Ambil riwayat transaksi dari backend berdasarkan filter periode
-        $response = ApiHelper::call('get', 'transactions', ['period' => $period]);
+        $response = ApiHelper::call('get', 'dashboard/transactions', ['period' => $period]);
         $histories = $response->successful() ? $response->json() : [];
-
         $summaryResponse = ApiHelper::call('get', 'dashboard/summary');
         $summary = $summaryResponse->successful() ? $summaryResponse->json() : [];
         $user = $summary['user'] ?? null;

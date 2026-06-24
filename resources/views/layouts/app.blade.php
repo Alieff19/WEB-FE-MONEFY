@@ -145,6 +145,7 @@
           <div class="modal-body p-4 pt-0">
             <form class="api-form" id="addTransactionForm" action="{{ route('transaction.store') }}" method="POST">
               @csrf
+              <input type="hidden" name="_method" id="transactionFormMethod" value="POST">
               <input type="hidden" name="type" id="transactionTypeValue" value="expense">
 
               {{-- Hero Amount Input --}}
@@ -440,6 +441,65 @@
         transfer: { color: '#6366F1', class: 'bg-transfer', glider: 'calc(66.666% + 2px)', title: 'Process Transfer', activeSegment: 2 }
       };
 
+      let transactionEditMode = false;
+      const addTransactionModal = document.getElementById('addTransactionModal');
+      const addTransactionTitle = document.getElementById('addTransactionModalLabel');
+      const addTransactionForm = document.getElementById('addTransactionForm');
+      const transactionFormMethodInput = document.getElementById('transactionFormMethod');
+
+      const editModeReset = function() {
+          transactionEditMode = false;
+          addTransactionForm.setAttribute('method', 'POST');
+          transactionFormMethodInput.value = 'POST';
+          addTransactionForm.setAttribute('action', '{{ route('transaction.store') }}');
+          addTransactionTitle.innerText = 'New Transaction';
+          submitBtn.querySelector('span').innerText = 'Save Transaction';
+          typeSegments.forEach(btn => btn.disabled = false);
+          setActiveType('expense');
+      };
+
+      const ensureWalletsLoaded = async function() {
+          if (allWallets.length > 0) return;
+          try {
+              const res  = await fetch('{{ route("wallet.list") }}', {
+                  headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              });
+              const json = await res.json();
+              allWallets = json.data ?? [];
+              buildOptions(txWallet, allWallets);
+              buildOptions(txToWallet, allWallets);
+          } catch (e) {
+              console.error('Failed to load wallets:', e);
+          }
+      };
+
+      window.openEditTransactionModal = async function(data) {
+          await ensureWalletsLoaded();
+
+          transactionEditMode = true;
+          addTransactionTitle.innerText = 'Edit Transaction';
+          addTransactionForm.setAttribute('action', `/transactions/${data.id}`);
+          addTransactionForm.setAttribute('method', 'PUT');
+          transactionFormMethodInput.value = 'PUT';
+          typeSegments.forEach(btn => btn.disabled = true);
+
+          if (data.type) {
+              setActiveType(data.type);
+          }
+
+          txAmount.value = Number(data.rawAmount || data.amount || 0).toLocaleString('id-ID');
+          txTitle.value = data.title || '';
+          txCategory.value = data.category || '';
+          txDate.value = data.transactionDate ? data.transactionDate.split(' ')[0] : '';
+          txWallet.value = data.walletId || '';
+          txWallet.dispatchEvent(new Event('change'));
+          txToWallet.value = data.toWalletId || '';
+          txNote.value = data.note || '';
+
+          const bsModal = new bootstrap.Modal(addTransactionModal);
+          bsModal.show();
+      };
+
       window.setActiveType = function(type) {
         const cfg = config[type];
         
@@ -522,7 +582,7 @@
 
       modal && modal.addEventListener('hidden.bs.modal', function () {
         document.getElementById('addTransactionForm').reset();
-        setActiveType('expense');
+        editModeReset();
       });
 
     })();
