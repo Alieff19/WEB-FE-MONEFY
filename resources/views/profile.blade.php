@@ -12,8 +12,18 @@
                     <!-- Circular Avatar Profile -->
                     <div class="profile-avatar-container mb-3 position-relative d-inline-block">
                         <div class="profile-avatar overflow-hidden" style="width: 120px; height: 120px; border-radius: 50%; background-color: var(--primary-purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto;">
-                            @if(!empty($user['avatar']))
-                                <img src="{{ $user['avatar'] }}" alt="Avatar" id="userAvatarImg" style="width: 100%; height: 100%; object-fit: cover;">
+                            @php
+                                // Use session as fallback after upload, add cache-busting to prevent browser caching
+                                $avatarUrl = $user['avatar'] ?? session('user.avatar');
+                                if ($avatarUrl) {
+                                    if (str_contains($avatarUrl, '/storage/v1/s3/')) {
+                                        $avatarUrl = str_replace('/storage/v1/s3/', '/storage/v1/object/public/', $avatarUrl);
+                                    }
+                                    $avatarUrl = $avatarUrl . (str_contains($avatarUrl, '?') ? '&' : '?') . 'v=' . time();
+                                }
+                            @endphp
+                            @if(!empty($avatarUrl))
+                                <img src="{{ $avatarUrl }}" alt="Avatar" id="userAvatarImg" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
                                 <i class="bi bi-person-fill" id="userAvatarIcon"></i>
                                 <img src="" alt="Avatar" id="userAvatarImg" class="d-none" style="width: 100%; height: 100%; object-fit: cover;">
@@ -105,7 +115,9 @@
                 const imgTag = document.getElementById('userAvatarImg');
                 const iconTag = document.getElementById('userAvatarIcon');
                 
-                imgTag.src = result.avatar_url;
+                // Add cache-busting parameter with timestamp to force image reload
+                const avatarUrlWithCache = result.avatar_url + (result.avatar_url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+                imgTag.src = avatarUrlWithCache;
                 imgTag.classList.remove('d-none');
                 
                 if(iconTag) {
@@ -113,6 +125,11 @@
                 }
                 
                 alert('Success! Profile picture updated.');
+                
+                // Optional: Refresh page after 2 seconds to ensure Blade view gets fresh data from API
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
                 const err = await response.json().catch(()=>({}));
                 alert('Error: ' + (err.message || 'Failed to upload.'));
